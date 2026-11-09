@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>文華國小 115 學年度全校課表系統</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef3f4;--sf:#fff;--ink:#14272e;--mu:#5b6f77;--ln:#cdd9dc;--ac:#0b6e6e;--ac2:#d6eeee;--bad:#b3261e;--badbg:#fde4e1;--sel:#fff3bf}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10191c;--sf:#182429;--ink:#e3eef0;--mu:#93a9b0;--ln:#2b3d43;--ac:#4cc3c3;--ac2:#18383b;--bad:#ff8a80;--badbg:#4a1f1b;--sel:#4d4310}}
+:root[data-theme="dark"]{--bg:#10191c;--sf:#182429;--ink:#e3eef0;--mu:#93a9b0;--ln:#2b3d43;--ac:#4cc3c3;--ac2:#18383b;--bad:#ff8a80;--badbg:#4a1f1b;--sel:#4d4310}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+header{padding:14px 16px 0;max-width:1100px;margin:auto}
+h1{font-size:20px;margin:0}
+header p{margin:2px 0 10px;color:var(--mu);font-size:13px}
+nav{display:flex;gap:2px;overflow-x:auto;border-bottom:2px solid var(--ln)}
+nav button{border:0;background:none;color:var(--mu);padding:9px 16px;font:inherit;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+nav button.on{color:var(--ac);border-color:var(--ac);font-weight:700}
+main{max-width:1100px;margin:auto;padding:14px 16px 40px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+select,input,textarea,button.b{font:inherit;color:var(--ink);background:var(--sf);border:1px solid var(--ln);border-radius:6px;padding:6px 10px}
+button.b{cursor:pointer}button.b.p{background:var(--ac);color:var(--bg);border-color:var(--ac);font-weight:700}
+button.b.on{background:var(--sel);border-color:var(--ink)}
+.w{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:var(--sf);min-width:560px}
+th,td{border:1px solid var(--ln);padding:6px 4px;text-align:center;vertical-align:middle}
+th{background:var(--ac2);font-weight:600;font-size:13px}
+td.c{height:58px;cursor:default}
+td.c small{display:block;color:var(--mu);font-size:11px}
+td.e{cursor:pointer}td.e:hover{outline:2px solid var(--ac);outline-offset:-2px}
+td.x{background:var(--badbg);color:var(--bad)}td.x small{color:var(--bad)}
+td.s{background:var(--sel)}
+td.free{background:repeating-linear-gradient(135deg,transparent 0 6px,var(--ac2) 6px 7px)}
+.bk{background:var(--ac2);font-size:12px;color:var(--mu)}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:12px 14px;margin:12px 0}
+.card h3{margin:0 0 8px;font-size:15px}
+.warn{background:var(--badbg);color:var(--bad);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:14px}
+.ok{background:var(--ac2);color:var(--ac);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:14px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.kv label{display:flex;gap:6px;align-items:center;font-size:13px}.kv label span{min-width:7em;color:var(--mu)}.kv input{flex:1;min-width:0}
+textarea{width:100%;height:150px;font:12px/1.4 monospace}
+.pl{display:flex;flex-wrap:wrap;gap:6px}.pl span{background:var(--ac2);border-radius:14px;padding:2px 10px;font-size:13px}
+.tag{font-size:12px;color:var(--mu)}
+td.m{background:var(--ac2)}td.dr{outline:2px dashed var(--ac);outline-offset:-3px}td.x{background:var(--badbg);color:var(--bad)}td.x small{color:var(--bad)}td.s{background:var(--sel);color:var(--ink)}td.s small{color:var(--mu)}input[type=date]{padding:5px 8px}
+</style>
+</head>
+<body>
+<header>
+<h1>文華國小 115 學年度全校課表</h1>
+<p>依班級、教師、科目、節次查詢；可調整課程、對調節次並自動偵測教師衝堂</p>
+<nav id="nav"></nav>
+</header>
+<main id="main"></main>
+<script>
+const DAYS=["一","二","三","四","五"],PER=[1,2,3,4,5,6,7];
+const PT=["8:40","9:30","10:30","11:20","13:20","14:10","15:05"];
+const SEED={c:{
+"一年一班":{hr:"戴詩珊",t:{"本土語言":"黃千芝","生活(視覺藝術)":"陳招文","體育":"吳昱輝","FUN遊文華":"許華蓁","生活(音樂)":"葛俐吟"},
+g:[["本土語言","數學","國語","生活","","",""],["數學","生活(視覺藝術)","生活(視覺藝術)","國語","閱讀","體育","健康綠活"],["FUN遊文華","國語","國語","生活","","",""],["數學","國語","體育","生活","","",""],["數學","生活(音樂)","國語","健康","","",""]]},
+"一年二班":{hr:"葉子蘇",t:{"FUN遊文華":"許華蓁","生活(視覺藝術)":"余安麗","本土語言":"黃千芝","生活(音樂)":"葛俐吟"},
+g:[["國語","數學","FUN遊文華","生活","","",""],["國語","生活(視覺藝術)","生活(視覺藝術)","數學","生活","體育","翻閱文華"],["國語","本土語言","數學","健康","","",""],["國語","生活(音樂)","數學","生活","","",""],["體育","國語","國語","健康綠活","","",""]]},
+"一年三班":{hr:"薛恩惘",t:{"本土語言":"楊季珍","健康":"林子堯","體育":"吳昱輝","生活(視覺藝術)":"余安麗","生活(音樂)":"葛俐吟","FUN遊文華":"許華蓁"},
+g:[["國語","數學","本土語言","生活","","",""],["生活(視覺藝術)","國語","健康","生活","翻閱文華","健康綠活","體育"],["國語","國語","生活(視覺藝術)","數學","","",""],["體育","國語","生活(音樂)","數學","","",""],["國語","FUN遊文華","數學","生活","","",""]]}
+}};
+const AB={國:"國語",數:"數學",生:"生活",健:"健康",體:"體育",翻:"翻閱文華",視:"生活(視覺藝術)",音:"生活(音樂)",英:"FUN遊文華",本:"本土語言",綠:"健康綠活"},X=s=>AB[s]||s;
+const ADD={
+"一年四班":["林玉雯",{本:"黃淑珍",體:"吳昱輝",英:"許華蓁",音:"葛俐吟"},"本數國生|國國體數健綠英|數國翻生|數體國生|視視音國"],
+"一年五班":["楊玉鈴",{本:"黃淑珍",體:"吳昱輝",英:"許華蓁",視:"余安麗"},"國數本生|國體數生健英綠|國國翻音|視視國數|國數體生"],
+"二年一班":["徐言芳",{本:"楊季珍",視:"陳又菁",體:"吳奇益",英:"莊琬婷"},"生數國本|國數視視綠翻音|數體國國|數國英生|體生國健"],
+"二年二班":["林孟瑜",{體:"吳奇益",翻:"宋俊賢",視:"莊琬婷",英:"莊琬婷",本:"楊季珍",音:"王怡靜"},"國生體數|國翻數數視視綠|國國英生|本體數生|國國音健"],
+"二年三班":["徐毓璘",{本:"黃淑珍",視:"莊琬婷",體:"吳奇益",英:"莊琬婷",音:"王怡靜"},"生國數本|國數視視健體生|綠英國國|翻國音數|生國體數"],
+"二年四班":["饒卿玄",{體:"吳奇益",視:"謝佳子",本:"黃淑珍",英:"莊琬婷"},"國體生數|國國生生視視健|國數體綠|本國翻音|國數英生"],
+"二年五班":["徐亦杰",{生:"楊慧蓮",體:"吳奇益",本:"黃千芝",英:"莊琬婷"},"國生生健|國體翻數視視綠|音數本國|體國國數|國英生數"],
+"二年六班":["陳秀琴",{視:"謝佳子",英:"莊琬婷",體:"吳奇益",本:"陳俊宏",音:"王怡靜"},"視視國生|國英數翻健生體|國數本生|數音國國|國體數綠"]};
+for(const n in ADD){const[h,t,g]=ADD[n],T={};for(const k in t)T[X(k)]=t[k];SEED.c[n]={hr:h,t:T,g:g.split("|").map(d=>PER.map((_,i)=>d[i]?X(d[i]):""))}}
+const AU={國:"國語",數:"數學",本:"本土語言",視:"視覺藝術",音:"音樂",社:"社會",自:"自然科學",英:"英語",體:"體育",綜:"綜合活動",健:"健康",創:"創客ING",翻:"翻閱經典",桌:"桌遊設計師",嘉:"文華嘉年華",綠:"健康綠活",讀:"閱讀"},U=s=>AU[s]||s;
+const ADU={
+"五年一班":["陳奕任",{本:"楊季珍",音:"蘇千雯",視:"謝佳子",創:"賴巧怡",社:"陳俊宏",健:"林俐欣",自:"余安麗",體:"吳昱輝",英:"許華蓁"},"本數視視國創綜|數國社綜自自健|體數英國|數國社社翻音綠|桌體國嘉英自翻"],
+"五年二班":["徐瑾慧",{社:"陳俊宏",創:"賴巧怡",自:"余安麗",英:"許華蓁",視:"謝佳子",體:"吳崇豪",本:"楊季珍",音:"蘇千雯",健:"林俐欣"},"數國社創翻自自|視視數國綜綠體|數國綜英|數體本國翻社社|桌音國嘉健英自"],
+"五年三班":["林孟琪",{英:"莊琬婷",自:"洪翠妙",音:"蘇千雯",體:"吳崇豪",社:"蔡秉芳",創:"賴巧怡",本:"黃千芝",視:"謝佳子",健:"林俐欣"},"英國自自翻音綜|國體數綜社社創|嘉國數本|數國視視英自翻|國數桌社綠健體"],
+"五年四班":["黃美惠",{英:"許華蓁",音:"蘇千雯",視:"謝佳子",社:"蔡秉芳",自:"洪翠妙",創:"賴巧怡",體:"廖永宏",健:"林逸婷",本:"黃淑珍"},"綜英國數音視視|翻桌社社自國體|讀英國數|國體本數綠創社|自自國數嘉健綜"],
+"五年五班":["范梅芳",{社:"蔡秉芳",本:"黃千芝",自:"洪翠妙",視:"謝佳子",體:"吳崇豪",英:"許華蓁",創:"賴巧怡",音:"蘇千雯",健:"林逸婷"},"翻國數社本自綜|國數體翻英創桌|數國自自|體英嘉國社社綠|國數音綜健視視"],
+"六年一班":["許柏瀚",{自:"林子堯",體:"吳崇豪",社:"林俐欣",創:"賴巧怡",視:"謝佳子",本:"黃千芝",音:"蘇千雯"},"數國英自綜翻體|國社社綠創桌健|數國視視|數國英本自自綜|嘉數國翻音體社"],
+"六年二班":["陳馨蓓",{創:"賴巧怡",健:"宋俊賢",自:"林子堯",音:"蘇千雯",體:"洪志林",視:"謝佳子",英:"陳又菁",本:"黃淑珍"},"綜英創翻自健體|國國視視桌翻數|自自數國|數國社本社社體|嘉數國音綠英綜"],
+"六年三班":["陳彥慈",{英:"陳又菁",體:"吳崇豪",創:"賴巧怡",自:"林子堯",社:"陳俊宏",音:"蘇千雯",視:"謝佳子",健:"林逸婷",本:"楊季珍"},"國數英嘉健體創|國數綠自社社綜|視視國數|國數英本翻翻體|國社自自桌音綜"],
+"六年四班":["陳映潔",{社:"林俐欣",體:"吳崇豪",本:"黃千芝",英:"陳又菁",自:"楊慧蓮",音:"蘇千雯",健:"林逸婷",創:"賴巧怡",視:"謝佳子"},"數國嘉社自本綠|英綜自自國體桌|數健音國|數創體綜社社國|數國視視翻翻英"],
+"六年五班":["黃涓喬",{健:"林逸婷",社:"林俐欣",英:"陳又菁",本:"黃淑珍",創:"賴巧怡",視:"謝佳子",自:"楊慧蓮",音:"蘇千雯",體:"洪志林"},"數嘉健國社社英|數國音創綜自體|數英國社|視視國桌本翻綠|數國體綜自自翻"]};
+for(const n in ADU){const[h,t,g]=ADU[n],T={};for(const k in t)T[U(k)]=t[k];SEED.c[n]={hr:h,t:T,g:g.split("|").map(d=>PER.map((_,i)=>d[i]?U(d[i]):""))}}
+const AM=Object.assign({},AU,{翻:"翻閱文華",資:"資訊任意門",遊:"FUN遊文華"}),M=s=>AM[s]||s;
+const ADM={
+"三年一班":["李若男",{本:"黃千芝",社:"李宜縈",自:"胡魁",英:"陳又菁",遊:"陳又菁",音:"蘇千雯",資:"洪翠妙",體:"吳奇益"},"國本社社數體綜|國數自自視視健|體國社數|綠音國數翻自資|國綜遊英"],
+"三年二班":["李瑞熒",{體:"吳奇益",自:"胡魁",資:"洪翠妙",社:"陳招文",本:"黃千芝",英:"陳又菁",遊:"陳又菁",音:"蘇千雯"},"體國數自健英綜|翻資數國社視視|本數社國|綠遊音國社體綜|數國自自"],
+"三年三班":["楊濓山",{體:"吳昱輝",音:"蘇千雯",社:"李宜縈",自:"胡魁",英:"陳又菁",遊:"陳又菁",健:"葛冠蘭",本:"楊季珍"},"數本國綠英體綜|音社數國自自綜|數國視遊|數國資視自健體|翻國社社"],
+"三年四班":["許薪倫",{社:"陳招文",音:"蘇千雯",自:"王怡靜",英:"陳又菁",遊:"陳又菁",體:"吳昱輝",本:"楊季珍",資:"洪翠妙"},"數社國綜自自翻|體音數國視自健|數國英綜|數國社社視本遊|體國資綠"],
+"三年五班":["鄭英敏",{本:"黃淑珍",音:"蘇千雯",體:"廖永宏",資:"洪翠妙",社:"李宜縈",自:"王怡靜",英:"陳又菁",遊:"陳又菁"},"國本音數視視體|國英資數綜社翻|自自國數|國數社社健遊綠|國自體綜"],
+"四年一班":["劉予臻",{資:"胡魁",體:"吳昱輝",自:"胡魁",社:"林逸婷",本:"黃千芝",音:"蘇千雯",英:"莊琬婷",遊:"莊琬婷"},"資國體數英視視|自自國數社社綜|遊國數綜|國本數社音體健|國自翻綠"],
+"四年二班":["巫岱祐",{資:"胡魁",音:"蘇千雯",自:"胡魁",社:"林逸婷",英:"莊琬婷",遊:"莊琬婷",體:"吳奇益",本:"楊季珍"},"國資數音健翻自|遊數體社視視綜|數國自自|國本國綜社社體|綠數國英"],
+"四年三班":["林育璋",{音:"蘇千雯",自:"余安麗",體:"吳奇益",健:"吳崇豪",資:"胡魁",本:"楊季珍",視:"葛俐吟",英:"許華蓁",遊:"許華蓁"},"音國自自數綜體|國數英健社翻綜|國資數自|國數體社本視視|綠國社遊"],
+"四年四班":["林淑媛",{體:"吳昱輝",自:"余安麗",音:"蘇千雯",英:"許華蓁",遊:"許華蓁",本:"黃淑珍"},"英國數社視視體|國數社自綠音綜|數國體健|社國自自遊本綜|國數資翻"],
+"四年五班":["鐘仁惠",{體:"吳昱輝",資:"胡魁",音:"蘇千雯",自:"余安麗",本:"黃淑珍",英:"許華蓁",遊:"許華蓁"},"社體國數資視視|社英國數音綜自|社體國數|國本數健自自綜|翻國遊綠"]};
+for(const n in ADM){const[h,t,g]=ADM[n],T={};for(const k in t)T[M(k)]=t[k];SEED.c[n]={hr:h,t:T,g:g.split("|").map(d=>PER.map((_,i)=>d[i]?M(d[i]):""))}}
+const RCAP={"圖書館":2},CN="一二三四五六",RSUB={"音樂教室":["音樂"],"電腦教室":["資訊任意門","創客ING"],"圖書館":["翻閱文華","翻閱經典","閱讀"],"中年級自然教室":["自然科學"],"高年級自然教室":["自然科學"]};
+const RM={
+"音樂教室":["43,,35,42,54,53,","33,34,65,,45,44,",",,64,,,,",",31,32,,41,51,",",52,55,62,61,63,"],
+"電腦教室":["41,42,62,52,45,51,63",",32,35,65,61,55,53",",43,,,,,",",64,33,,,54,31",",,34,,,,"],
+"圖書館":["55,,,62,52,42,34","32,22,25,26,11+13,21+43,12+35","54,,14+15,,,,","23,,24,,31,63+65,53","33+45,,41,61+44,,64,51"],
+"中年級自然教室":[",,43,43,34,34,","41,41,31,31,33,33,","35,35,42,42,,,",",,44,44,45,45,",",,32,32,,,"],
+"高年級自然教室":[",,53,53,,52,52",",,64,64,51,51,","62,62,55,55,,,",",,,,61,61,","54,54,63,63,65,65,"],
+"二樓多功能教室":["#布農語,#三客語,#一客語,#二客語,#拉阿魯哇語直播共學,#賽考利克泰雅語直播共學,",",,,,,,",",,,,,,",",#四客語,#五客語,#六客語,,,",",,,,,,"],
+"中型會議室":["#五阿美,#三阿美,,,,,",",,,,,,","#三越南,#一越南,#二越南,#五越南,,,",",,,,,,",",,,,,,"]};
+const rd=s=>s.split(",").map(x=>x?x.split("+").map(c=>c[0]=="#"?c:CN[c[0]-1]+"年"+CN[c[1]-1]+"班"):[]);
+SEED.r={};for(const n in RM)SEED.r[n]=RM[n].map(rd);
+let S,V="class",sel=null,swap=false,msg="",cur={c:"",t:"",s:"",ms:[],win:0,sm:1,pp:0,fp:0};
+try{const x=localStorage.getItem("tt115");S=x?JSON.parse(x):null}catch(e){}
+if(!S||!S.c)S=JSON.parse(JSON.stringify(SEED));
+const save=()=>{try{localStorage.setItem("tt115",JSON.stringify(S))}catch(e){}};
+if(!S.v||S.v<10){for(const n in SEED.c)if(!S.c[n])S.c[n]=JSON.parse(JSON.stringify(SEED.c[n]));
+const k5=S.c["二年五班"];if(k5&&k5.t["生活"]=="楊慈蓮")k5.t["生活"]="楊慧蓮";
+for(const n in S.c){const t=S.c[n].t;for(const k in t)if(t[k]=="胡魏")t[k]="胡魁"}
+if(!S.r)S.r=JSON.parse(JSON.stringify(SEED.r));if(!S.log)S.log=[];
+const lb=S.r["圖書館"];if(lb&&lb[0][6].includes("五年五班")&&!lb[0][0].includes("五年五班")){lb[0][6].splice(lb[0][6].indexOf("五年五班"),1);lb[0][0].push("五年五班")}
+S.v=10;save()}
+if(!S.log)S.log=[];
+const q2=x=>String(x).padStart(2,"0"),pd=s=>{const a=s.split("-").map(Number);return new Date(a[0],a[1]-1,a[2])},fd=x=>x.getFullYear()+"-"+q2(x.getMonth()+1)+"-"+q2(x.getDate()),
+addD=(s,n)=>{const x=pd(s);x.setDate(x.getDate()+n);return fd(x)},wd=s=>{const w=pd(s).getDay();return w>=1&&w<=5?w-1:-1},mon=s=>addD(s,-((pd(s).getDay()+6)%7)),
+WK="日一二三四五六",dlab=s=>{const x=pd(s);return (x.getMonth()+1)+"/"+x.getDate()+"(週"+WK[x.getDay()]+")"},dfull=s=>s.replace(/-/g,"/")+"(週"+WK[pd(s).getDay()]+")",today=fd(new Date());
+cur.wk=mon(today);cur.pdt=wd(today)>=0?today:addD(mon(today),7);cur.fdt=cur.pdt;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tOf=(c,s)=>s&&S.c[c]?(S.c[c].t[s]||S.c[c].hr):"";
+const cls=()=>Object.keys(S.c);
+function all(){const r=[];for(const c of cls())S.c[c].g.forEach((row,d)=>row.forEach((s,i)=>{if(s)r.push({c,d,p:i,s,t:tOf(c,s)})}));return r}
+function info(){const A=all(),m={};A.forEach(a=>{const k=a.t+"|"+a.d+"|"+a.p;(m[k]=m[k]||[]).push(a)});
+const bad=new Set(),list=[];for(const k in m)if(m[k].length>1){const a=m[k][0];list.push(a.t+" 週"+DAYS[a.d]+"第"+(a.p+1)+"節："+m[k].map(x=>x.c).join("、"));m[k].forEach(x=>bad.add(x.c+x.d+x.p))}
+for(const rn in S.r)S.r[rn].forEach((day,d)=>day.forEach((cell,p)=>{const cs=cell.filter(x=>x[0]!="#");
+if(cs.length>(RCAP[rn]||1)){list.push(rn+" 週"+DAYS[d]+"第"+(p+1)+"節"+((RCAP[rn]||1)>1?"超過容量":"衝堂")+"："+cs.join("、"));cs.forEach(c=>bad.add(c+d+p))}
+cs.forEach(c=>{const k=S.c[c];if(!k)return;const s=k.g[d][p];if(!RSUB[rn]||!RSUB[rn].includes(s)){list.push(rn+" 週"+DAYS[d]+"第"+(p+1)+"節預約給"+c+"，但該班目前是"+(s||"無課"));bad.add(c+d+p)}})}));
+return{A,bad,list}}
+const teachers=A=>[...new Set([...A.map(a=>a.t),...cls().map(c=>S.c[c].hr)])].filter(Boolean).sort();
+const subjects=A=>[...new Set(A.map(a=>a.s))].sort();
+function opts(a,v,al){return (al?'<option value="">全部</option>':"")+a.map(x=>"<option"+(x==v?" selected":"")+">"+esc(x)+"</option>").join("")}
+function grid(f,dts){let h='<div class="w"><table><tr><th>節</th>'+DAYS.map((d,i)=>"<th>週"+d+(dts?'<small class="tag"><br>'+dlab(dts[i]).replace(/\(.*\)/,"")+"</small>":"")+"</th>").join("")+"</tr>";
+PER.forEach((n,p)=>{if(p==4)h+='<tr><td class="bk" colspan="6">午餐及午休 12:00–13:10</td></tr>';h+="<tr><th>"+n+"<small class='tag'><br>"+PT[p]+"</small></th>"+DAYS.map((_,d)=>f(d,p)).join("")+"</tr>"});return h+"</table></div>"}
+function conflictBar(L){return L.length?'<div class="warn"><b>衝堂或不符 '+L.length+' 筆</b><br>'+L.map(esc).join("<br>")+"</div>":'<div class="ok">沒有教師或教室衝堂</div>'}
+/* ---- 以「日期」計算的課表：週課表 + 調課申請（可跨週） ---- */
+const key=(c,dt,p)=>c+"|"+dt+"|"+p;
+function ap(E,s){const A=key(s.c,s.a.d,s.a.p);
+if(s.k=="tx"){E.T.set(A,s.b.t);E.T.set(key(s.c2,s.b.d,s.b.p),s.a.t);return}
+const B=key(s.c,s.b.d,s.b.p),la=E.gl(s.c,s.a.d,s.a.p),lb=E.gl(s.c,s.b.d,s.b.p),ra=E.gr(s.c,s.a.d,s.a.p),rb=E.gr(s.c,s.b.d,s.b.p),ta=E.T.get(A),tb=E.T.get(B);
+E.L.set(A,lb);E.L.set(B,la);E.R.set(A,rb);E.R.set(B,ra);
+if(tb===undefined)E.T.delete(A);else E.T.set(A,tb);if(ta===undefined)E.T.delete(B);else E.T.set(B,ta)}
+function eng(ex){const E={L:new Map(),R:new Map(),T:new Map()};
+E.gl=(c,dt,p)=>{const k=key(c,dt,p);if(E.L.has(k))return E.L.get(k);const w=wd(dt);return w>=0&&S.c[c]?S.c[c].g[w][p]:""};
+E.gr=(c,dt,p)=>{const k=key(c,dt,p);if(E.R.has(k))return E.R.get(k);const w=wd(dt);return w>=0?(Object.keys(S.r).find(r=>S.r[r][w][p].includes(c))||""):""};
+E.gt=(c,dt,p)=>{const k=key(c,dt,p);return E.T.has(k)?E.T.get(k):tOf(c,E.gl(c,dt,p))};
+for(const e of S.log)if(e.k=="app")for(const s of e.steps)ap(E,s);
+for(const s of ex||[])ap(E,s);return E}
+function iss(E,dt){const o=[];if(wd(dt)<0)return o;
+for(let p=0;p<7;p++){const m={},rm={};for(const c in S.c){const s=E.gl(c,dt,p);if(!s)continue;const t=E.gt(c,dt,p);(m[t]=m[t]||[]).push(c);const r=E.gr(c,dt,p);if(r)(rm[r]=rm[r]||[]).push(c)}
+for(const t in m)if(m[t].length>1)o.push({s:dlab(dt)+"第"+(p+1)+"節 教師"+t+"衝堂："+m[t].join("、"),cs:m[t],dt,p});
+for(const r in rm)if(rm[r].length>(RCAP[r]||1))o.push({s:dlab(dt)+"第"+(p+1)+"節 "+r+"超過容量："+rm[r].join("、"),cs:rm[r],dt,p})}
+return o}
+const dn=(d,p)=>"週"+DAYS[d]+"第"+(p+1)+"節",cs=(s,t)=>(s||"無課")+"("+(t||"-")+")";
+const stepText=s=>s.k=="tx"?s.a.t+" 的 "+s.c+" "+dlab(s.a.d)+"第"+(s.a.p+1)+"節("+s.a.s+") ↔ "+s.b.t+" 的 "+s.c2+" "+dlab(s.b.d)+"第"+(s.b.p+1)+"節("+s.b.s+")（互換授課教師，課表不變）":s.c+" "+dlab(s.a.d)+"第"+(s.a.p+1)+"節 "+cs(s.a.s,s.a.t)+" ↔ "+dlab(s.b.d)+"第"+(s.b.p+1)+"節 "+cs(s.b.s,s.b.t);
+const sdOld=s=>s.c+" "+dn(s.a.d,s.a.p)+" "+cs(s.a.s,s.a.t)+" ↔ "+dn(s.b.d,s.b.p)+" "+cs(s.b.s,s.b.t);
+const tcs=st=>[...new Set(st.flatMap(s=>[s.a.t,s.b.t]).filter(Boolean))];
+const datesOf=st=>[...new Set(st.flatMap(s=>[s.a.d,s.b.d]))].sort();
+const clsOf=st=>[...new Set(st.flatMap(s=>s.c2?[s.c,s.c2]:[s.c]))].join("、");
+function desc(e){if(e.k=="app")return e.steps.map(stepText).join("；");if(e.k=="multi")return e.steps.map(sdOld).join("；");const a=e.a,b=e.b;return e.k=="edit"?"週課表 "+dn(a.d,a.p)+" "+cs(a.s,a.t)+" → "+cs(b.s,b.t):(e.k=="undo"?"【還原】":"")+dn(a.d,a.p)+" "+cs(a.s,a.t)+" ↔ "+dn(b.d,b.p)+" "+cs(b.s,b.t)}
+function stamp(){const n=new Date(),ds=fd(n);return{id:(S.lid=(S.lid||0)+1),no:"T"+ds.replace(/-/g,"")+"-"+q2(S.log.filter(x=>x.t&&x.t.startsWith(ds)).length+1),t:ds+" "+q2(n.getHours())+":"+q2(n.getMinutes())}}
+function addSw(c,a,b){const E=eng(cur.ms);if(wd(a.d)<0||wd(b.d)<0)return"只能選星期一到五的日期";if(a.d==b.d&&a.p==b.p)return"請選兩個不同的節次";
+const la=E.gl(c,a.d,a.p),lb=E.gl(c,b.d,b.p);if(!la||!lb)return"其中一節沒有課，無法對調";
+cur.ms.push({k:"sw",c,a:{d:a.d,p:a.p,s:la,t:E.gt(c,a.d,a.p)},b:{d:b.d,p:b.p,s:lb,t:E.gt(c,b.d,b.p)}});return""}
+function newIss(st){const E0=eng([]),E1=eng(st),o=[];for(const dt of datesOf(st)){const b=new Set(iss(E0,dt).map(x=>x.s));iss(E1,dt).forEach(x=>{if(!b.has(x.s))o.push(x.s)})}return o}
+function draftBar(){const st=cur.ms;if(!st.length)return"";const ni=newIss(st);
+return'<div class="card" style="border-color:var(--ac)"><h3>調課草稿（'+st.length+' 步，尚未送出）</h3><ol style="margin:4px 0 8px;padding-left:22px">'+st.map((s,i)=>"<li>"+esc(stepText(s))+' <button class="b" data-a="dx" data-x="'+i+'">移除</button></li>').join("")+"</ol>"+
+'<div class="tag">調課日期：'+esc(datesOf(st).map(dfull).join("、"))+"；涉及教師："+esc(tcs(st).join("、")||"-")+"</div>"+
+(ni.length?'<div class="warn" style="margin-top:8px"><b>送出後會新增 '+ni.length+" 筆衝堂</b><br>"+ni.map(esc).join("<br>")+"</div>":'<div class="ok" style="margin-top:8px">送出後沒有新增的教師或教室衝堂</div>')+
+'<div class="bar"><input data-rs="1" value="'+esc(cur.reason||"")+'" placeholder="調課原因（會記入申請）" style="flex:1;min-width:170px"><input data-who="1" value="'+esc(cur.who||"")+'" placeholder="申請人" size="8"><button class="b p" data-a="ds">'+(ni.length?"仍要送出（有衝堂）":"送出調課申請")+'</button><button class="b" data-a="dc">清空草稿</button></div></div>'}
+function search(c,A,win,cross){const T0=Date.now(),res=[],seen=new Set(),fc={},E=eng(cur.ms),mo=mon(A.d),dates=[];
+for(let o=win==2?-7:0;o<=(win>=1?7:0);o+=7)for(let i=0;i<5;i++)dates.push(addD(mo,o+i));
+const base={};dates.forEach(dt=>base[dt]=new Set(iss(E,dt).map(x=>x.s)));
+const sl=cl=>{const r=[];for(const dt of dates)for(let p=0;p<7;p++)if(E.gl(cl,dt,p))r.push({d:dt,p});return r};
+const bad=st=>{const ds=new Set();st.forEach(s=>{ds.add(s.a.d);ds.add(s.b.d)});const o=[];ds.forEach(dt=>iss(E,dt).forEach(x=>{if(!base[dt].has(x.s))o.push(x)}));return o};
+const same=(s,cl,q,r)=>s.c==cl&&((s.a.d==q.d&&s.a.p==q.p&&s.b.d==r.d&&s.b.p==r.p)||(s.b.d==q.d&&s.b.p==q.p&&s.a.d==r.d&&s.a.p==r.p));
+function go(st,K,cl,q){for(const r of sl(cl)){if(r.d==q.d&&r.p==q.p)continue;if(Date.now()-T0>2500||res.length>=8)return;
+const la=E.gl(cl,q.d,q.p),lb=E.gl(cl,r.d,r.p);if(!la||la==lb)continue;const ta=E.gt(cl,q.d,q.p),tb=E.gt(cl,r.d,r.p);if(ta==tb)continue;
+if(st.some(s=>same(s,cl,q,r)))continue;
+const s1={k:"sw",c:cl,a:{d:q.d,p:q.p,s:la,t:ta},b:{d:r.d,p:r.p,s:lb,t:tb}};ap(E,s1);const ns=st.concat([s1]),b=bad(ns);
+if(!b.length){if(ns.length==K&&(!cross||new Set(ns.map(s=>s.c)).size>1)){const k=ns.map(s=>s.c+s.a.d+s.a.p+s.b.d+s.b.p).join("|");if(!seen.has(k)){const fk=ns[0].c+ns[0].a.d+ns[0].a.p+ns[0].b.d+ns[0].b.p;fc[fk]=(fc[fk]||0)+1;if(fc[fk]<=2){seen.add(k);res.push(ns)}}}}
+else if(ns.length<K){const dn2=new Set();for(const it of b)for(const cc of it.cs){const kk=cc+it.dt+it.p;if(dn2.has(kk))continue;dn2.add(kk);go(ns,K,cc,{d:it.dt,p:it.p})}}
+ap(E,s1)}}
+for(let K=cross?2:1;K<=3&&res.length<8;K++)go([],K,c,{d:A.d,p:A.p});return res}
+function mutual(me,ot,dates,same){const E=eng(cur.ms),mine=[],th=[];
+for(const dt of dates)for(let p=0;p<7;p++)for(const c of cls()){const s=E.gl(c,dt,p);if(!s)continue;const t=E.gt(c,dt,p);if(t==me)mine.push({c,dt,p,s});if(t==ot)th.push({c,dt,p,s})}
+const base={};dates.forEach(dt=>base[dt]=new Set(iss(E,dt).map(x=>x.s)));const A=[],B=[];
+for(const m of mine)for(const x of th){if(m.dt==x.dt&&m.p==x.p)continue;
+if(m.c==x.c&&A.length<40){const s1={k:"sw",c:m.c,a:{d:m.dt,p:m.p,s:m.s,t:me},b:{d:x.dt,p:x.p,s:x.s,t:ot}};ap(E,s1);let ok=true;for(const dt of new Set([m.dt,x.dt]))iss(E,dt).forEach(z=>{if(!base[dt].has(z.s))ok=false});ap(E,s1);if(ok)A.push(s1)}
+if(B.length<40&&(!same||m.s==x.s)&&!th.some(y=>y.dt==m.dt&&y.p==m.p)&&!mine.some(y=>y.dt==x.dt&&y.p==x.p))B.push({k:"tx",c:m.c,c2:x.c,a:{d:m.dt,p:m.p,s:m.s,t:me},b:{d:x.dt,p:x.p,s:x.s,t:ot}})}
+return{A,B,n:[mine.length,th.length]}}
+const keys=e=>e.steps.flatMap(s=>s.k=="tx"?[key(s.c,s.a.d,s.a.p),key(s.c2,s.b.d,s.b.p)]:[key(s.c,s.a.d,s.a.p),key(s.c,s.b.d,s.b.p)]);
+const ovl=e=>{const ks=new Set(keys(e));return S.log.filter(x=>x.k=="app"&&x.id!=e.id&&keys(x).some(k=>ks.has(k)))};
+const tkt=e=>(e.k=="app"?["調課單　編號："+e.no,"申請日期："+e.t,"班級："+e.c,"調課日期："+e.dt.map(dfull).join("、"),"調整內容："].concat(e.steps.map((s,i)=>"　"+(i+1)+". "+stepText(s))):["調課單　編號："+e.no,"申請日期："+e.t,"班級："+e.c,"調整內容："+desc(e)]).concat(["涉及教師："+(e.tc.join("、")||"-"),"調課原因："+(e.r||"（未填）"),"申請人："+(e.w||"（未填）"),"","教務處核准：＿＿＿＿＿＿　　日期：＿＿＿＿＿＿"]).join("\n");
+const tsv=()=>["編號\t申請時間\t班級\t類型\t調課日期\t調整內容\t涉及教師\t原因\t申請人"].concat(S.log.map(e=>[e.no,e.t,e.c,e.k=="app"?"調課申請":"舊版:"+({swap:"對調",edit:"週課表修改",undo:"還原",multi:"多角調動"}[e.k]||""),e.k=="app"?e.dt.map(dfull).join("、"):"",desc(e),e.tc.join("、"),e.r,e.w].map(x=>String(x||"").replace(/[\t\n]/g," ")).join("\t"))).join("\n");
+const weekBar=()=>'<button class="b" data-a="wp">‹ 上週</button><input type="date" data-wk="1" value="'+cur.wk+'"><button class="b" data-a="wn">下週 ›</button><span class="tag">'+dfull(cur.wk)+" – "+dlab(addD(cur.wk,4))+"</span>";
+const dayOpts=(k,v)=>'<input type="date" data-k="'+k+'" value="'+v+'">',perOpts=(k,v)=>'<select data-k="'+k+'">'+PER.map((x,i)=>"<option value="+i+(i==v?" selected":"")+">第"+x+"節 "+PT[i]+"</option>").join("")+"</select>",
+winOpts=v=>'<select data-k="win">'+["同一週","本週與下週","前後各一週"].map((x,i)=>"<option value="+i+(i==v?" selected":"")+">"+x+"</option>").join("")+"</select>";
+function render(){
+const I=info(),T=teachers(I.A),Sb=subjects(I.A),C=cls();
+if(!cur.c||!S.c[cur.c])cur.c=C[0]||"";if(!cur.t||!T.includes(cur.t))cur.t=T[0]||"";if(!cur.s||!Sb.includes(cur.s))cur.s=Sb[0]||"";
+if(!cur.me||!T.includes(cur.me))cur.me=T[0];if(!cur.ot||!T.includes(cur.ot))cur.ot=T[1]||T[0];
+document.getElementById("nav").innerHTML=[["class","班級課表"],["teacher","教師課表"],["subject","科目查詢"],["period","節次查詢"],["find","調課建議"],["mutual","互調查詢"],["room","專科教室"],["log","調課紀錄"],["manage","管理與資料"]].map(a=>'<button data-v="'+a[0]+'" class="'+(V==a[0]?"on":"")+'">'+a[1]+"</button>").join("");
+let h="";const okM=()=>msg?'<div class="ok">'+esc(msg)+"</div>":"";
+const dts=[0,1,2,3,4].map(i=>addD(cur.wk,i));
+if(V=="class"){const k=S.c[cur.c],E=eng(cur.ms),E0=eng([]),is=dts.flatMap(dt=>iss(E,dt)),bad=new Set(is.flatMap(x=>x.cs.map(c=>key(c,x.dt,x.p))));
+h+=(is.length?'<div class="warn"><b>這一週衝堂 '+is.length+' 筆</b><br>'+is.map(x=>esc(x.s)).join("<br>")+"</div>":'<div class="ok">這一週沒有教師或教室衝堂</div>')+draftBar()+okM();
+h+='<div class="bar"><select data-k="c">'+opts(C,cur.c)+"</select><span>導師："+esc(k?k.hr:"")+"</span>"+weekBar()+'<button class="b'+(swap?" on":"")+'" data-a="swap">'+(swap?"調課中：點兩節為一步":"調課")+"</button></div>";
+if(swap)h+='<div class="tag" style="margin-bottom:8px">先點一節，可以用上方的日期或「上週／下週」切換到別週，再點第二節，就能跨週對調。'+(sel&&sel.c==cur.c&&!sel.edit?"已選：<b>"+esc(dlab(sel.dt))+"第"+(sel.p+1)+"節</b>":"")+"</div>";
+h+=grid((d,p)=>{const dt=dts[d],s=E.gl(cur.c,dt,p),b=k.g[d][p],t=E.gt(cur.c,dt,p),rm=E.gr(cur.c,dt,p),on=sel&&sel.c==cur.c&&sel.dt==dt&&sel.p==p,ch=s!=b||t!=tOf(cur.c,b),dr=s!=E0.gl(cur.c,dt,p)||t!=E0.gt(cur.c,dt,p);
+return'<td class="c e '+(bad.has(key(cur.c,dt,p))?"x ":"")+(on?"s ":"")+(ch?"m ":"")+(dr?"dr ":"")+(s?"":"free")+'" data-cell="'+dt+","+p+'">'+(s?esc(s)+"<small>"+esc(t)+"</small>"+(rm?"<small>"+esc(rm)+"</small>":"")+(ch?"<small>調課</small>":""):"")+"</td>"},dts);
+h+='<div class="tag" style="margin-top:6px">藍底＝這一天因調課而和週課表不同；虛線框＝草稿尚未送出的變動。沒有進入「調課」模式時，點格子是修改週課表（長期，所有週次都會改變）。</div>';
+if(sel&&sel.edit&&sel.c==cur.c){const w=wd(sel.dt),s=k.g[w][sel.p];h+='<div class="card"><h3>修改週課表（長期）：'+esc(cur.c)+" 週"+DAYS[w]+"第"+(sel.p+1)+'節</h3><div class="bar"><input id="ns" list="sl" value="'+esc(s)+'" placeholder="科目（空白代表無課）"><datalist id="sl">'+Sb.map(x=>"<option>"+esc(x)+"</option>").join("")+'</datalist><button class="b p" data-a="set">儲存</button><button class="b" data-a="clr">清空此節</button><button class="b" data-a="cancel">取消</button></div><div class="tag">這會改變每一週的課表。若只是某一天要調課，請用「調課」。</div></div>'}}
+if(V=="teacher"){const E=eng(cur.ms),is=dts.flatMap(dt=>iss(E,dt)).filter(x=>x.s.includes("教師"+cur.t));let n=0;
+h+=conflictBar(is.map(x=>x.s))+draftBar()+'<div class="bar"><select data-k="t">'+opts(T,cur.t)+"</select>"+weekBar()+"</div>";
+const g=grid((d,p)=>{const dt=dts[d],m=C.filter(c=>E.gl(c,dt,p)&&E.gt(c,dt,p)==cur.t);n+=m.length;const ch=m.some(c=>E.gl(c,dt,p)!=S.c[c].g[d][p]||E.gt(c,dt,p)!=tOf(c,S.c[c].g[d][p]));return'<td class="c '+(m.length>1?"x ":"")+(ch?"m ":"")+(m.length?"":"free")+'">'+m.map(c=>esc(c)+"<small>"+esc(E.gl(c,dt,p))+"</small>").join("")+"</td>"},dts);
+h+='<div class="tag" style="margin-bottom:6px">本週共 '+n+" 節（含調課後的變動）</div>"+g}
+if(V=="subject"){const E=eng(cur.ms),by={};
+const g=grid((d,p)=>{const dt=dts[d],m={};for(const c of C)if(E.gl(c,dt,p)==cur.s){const t=E.gt(c,dt,p);(m[t]=m[t]||[]).push(c);(by[t]=by[t]||[]).push({d,p,c})}
+const ts=Object.keys(m);return'<td class="c '+(ts.some(t=>m[t].length>1)?"x ":"")+(ts.length?"":"free")+'">'+ts.map(t=>"<b>"+esc(t)+"</b><small>"+m[t].map(esc).join("、")+"</small>").join("")+"</td>"},dts);
+const names=Object.keys(by).sort(),tot=names.reduce((a,t)=>a+by[t].length,0);
+h+=draftBar()+'<div class="bar"><select data-k="s">'+opts(Sb,cur.s)+"</select>"+weekBar()+'<span class="tag">本週共 '+tot+" 節，"+names.length+" 位教師</span></div>"+g+
+'<div class="w" style="margin-top:12px"><table><tr><th>教師</th><th>本週節數</th><th>上課節次（班級）</th></tr>'+names.map(t=>"<tr><td>"+esc(t)+"</td><td>"+by[t].length+'</td><td style="text-align:left">'+by[t].map(x=>"週"+DAYS[x.d]+"第"+(x.p+1)+"節（"+esc(x.c)+"）").join("、")+"</td></tr>").join("")+"</table></div>"}
+if(V=="period"){const E=eng(cur.ms),dt=cur.pdt,p=cur.pp,rows=C.filter(c=>E.gl(c,dt,p)),busy=new Set(rows.map(c=>E.gt(c,dt,p))),w=wd(dt);
+h+=draftBar()+'<div class="bar">'+dayOpts("pdt",dt)+perOpts("pp",p)+'<span class="tag">'+dfull(dt)+"</span></div>"+(w<0?'<div class="warn">這一天不是上課日（星期一到五）</div>':"")+"<div class='w'><table><tr><th>班級</th><th>科目</th><th>教師</th><th>教室</th></tr>"+
+rows.map(c=>"<tr><td>"+esc(c)+"</td><td>"+esc(E.gl(c,dt,p))+"</td><td>"+esc(E.gt(c,dt,p))+"</td><td>"+esc(E.gr(c,dt,p)||"")+"</td></tr>").join("")+"</table></div>"+
+'<div class="card"><h3>這一節沒課的教師（可代課、可調課）</h3><div class="pl">'+(w<0?"":T.filter(t=>!busy.has(t)).map(t=>"<span>"+esc(t)+"</span>").join("")||"無")+"</div></div>"+
+'<div class="card"><h3>專科教室使用情形</h3><div class="pl">'+Object.keys(S.r).map(r=>{const u=C.filter(c=>E.gl(c,dt,p)&&E.gr(c,dt,p)==r),tx=w<0?[]:S.r[r][w][p].filter(x=>x[0]=="#").map(x=>x.slice(1));return"<span>"+esc(r)+"："+(u.concat(tx).join("、")||"空")+"</span>"}).join("")+"</div></div>"}
+if(V=="find"){const E=eng(cur.ms),fc=cur.fc&&S.c[cur.fc]?cur.fc:C[0];cur.fc=fc;
+const les=cur.ft?C.filter(c=>E.gl(c,cur.fdt,cur.fp)&&E.gt(c,cur.fdt,cur.fp)==cur.ft):[],tc=cur.ft?(les[0]||""):fc,sl=tc?E.gl(tc,cur.fdt,cur.fp):"";
+h+=draftBar()+okM()+'<div class="card"><h3>調課建議：這一節要調走，幫我找方案</h3><p class="tag">指定要「調走」的那一節（用老師或班級）和日期，系統會在選定的範圍內找出調完不會新增教師或教室衝堂的對調方案，最多 3 步、可跨班、可跨週。同一位老師自己的課互換不會列出。</p><div class="bar"><select data-k="ft"><option value="">用班級指定</option>'+T.map(x=>"<option"+(x==cur.ft?" selected":"")+">"+esc(x)+"</option>").join("")+'</select><select data-k="fc">'+opts(C,fc)+"</select>"+dayOpts("fdt",cur.fdt)+perOpts("fp",cur.fp)+winOpts(cur.win)+'<select data-k="fx"><option value="">最少步驟</option><option value="x"'+(cur.fx=="x"?" selected":"")+'>只看跨班連鎖</option></select><button class="b p" data-a="find">找出方案</button></div><div class="tag">'+(wd(cur.fdt)<0?"這一天不是上課日":tc?esc(tc)+" "+dfull(cur.fdt)+"第"+(cur.fp+1)+"節："+(sl?esc(cs(sl,E.gt(tc,cur.fdt,cur.fp))):"沒有課"):"這位老師在這一節沒有課")+"</div></div>";
+if(cur.sol){const R=cur.sol.res;h+='<div class="card"><h3>'+(cur.sol.none?"請指定有課的節次":"找到 "+R.length+" 個方案")+"</h3>"+(!cur.sol.none&&!R.length?'<div class="tag">3 步以內沒有可行方案。可以把範圍放寬到下週，或換一節試試。</div>':"")+
+R.map((st,i)=>'<div class="card"><b>方案 '+(i+1)+"：共 "+st.length+" 步，涉及 "+clsOf(st).split("、").length+" 班、"+tcs(st).length+' 位教師</b><ol style="margin:4px 0 8px;padding-left:22px">'+st.map(s=>"<li>"+esc(stepText(s))+"</li>").join("")+'</ol><button class="b p" data-a="ap" data-x="'+i+'">加入調課草稿</button></div>').join("")+"</div>"}}
+if(V=="mutual"){const dates=[];for(let o=cur.win==2?-7:0;o<=(cur.win>=1?7:0);o+=7)for(let i=0;i<5;i++)dates.push(addD(cur.wk,o+i));
+const R=cur.me!=cur.ot?mutual(cur.me,cur.ot,dates,cur.sm==1):null;cur.mu=R;
+h+=draftBar()+okM()+'<div class="card"><h3>互調查詢：我和某位老師可以互相調課的節次</h3><p class="tag">選「我」和「對方」，系統找出雙方能互換的節次，已確認不會新增教師或教室衝堂。</p><div class="bar">我 <select data-k="me">'+opts(T,cur.me)+"</select>對方 <select data-k=\"ot\">"+opts(T,cur.ot)+"</select>"+weekBar()+winOpts(cur.win)+"</div></div>";
+if(R){h+='<div class="card"><h3>一、同班時間互換（兩人都教的班級，互換上課時間）</h3><p class="tag">我 '+R.n[0]+" 節、對方 "+R.n[1]+" 節（在選定範圍內）。</p>"+(R.A.length?"<ol>"+R.A.map((s,i)=>"<li>"+esc(stepText(s))+' <button class="b" data-a="mx" data-x="a'+i+'">加入草稿</button></li>').join("")+"</ol>":'<div class="tag">沒有可行的同班互換（兩人沒有共同任教的班級，或互換會造成衝堂）。</div>')+"</div>";
+h+='<div class="card"><h3>二、互相代課（雙方互換授課時段，各班課表不變）</h3><div class="bar"><select data-k="sm"><option value="1"'+(cur.sm==1?" selected":"")+'>只列相同科目</option><option value="0"'+(cur.sm==1?"":" selected")+'>不限科目</option></select></div><p class="tag">條件：對方在我的課那一節沒有課，我在對方的課那一節也沒有課。</p>'+(R.B.length?"<ol>"+R.B.map((s,i)=>"<li>"+esc(stepText(s))+' <button class="b" data-a="mx" data-x="b'+i+'">加入草稿</button></li>').join("")+"</ol>":'<div class="tag">沒有符合條件的時段。</div>')+"</div>"}
+else h+='<div class="warn">請選兩位不同的老師</div>'}
+if(V=="room"){const R=Object.keys(S.r);if(!cur.r||!S.r[cur.r])cur.r=R[0];const lb=c=>c[0]=="#"?c.slice(1):c;
+h+=conflictBar(I.list)+'<div class="bar"><select data-k="r">'+opts(R,cur.r)+"</select><span>週課表（長期）：每週使用 "+S.r[cur.r].flat().length+" 班次；點格子可新增或移除班級</span></div>";
+h+=grid((d,p)=>{const c2=S.r[cur.r][d][p],b=c2.some(c=>c[0]!="#"&&I.bad.has(c+d+p)),on=sel&&sel.d==d&&sel.p==p;return'<td class="c e '+(b?"x ":"")+(on?"s ":"")+(c2.length?"":"free")+'" data-rc="'+d+","+p+'">'+c2.map(c=>esc(lb(c))).join("<br>")+"</td>"});
+if(sel&&sel.d!=undefined){const cell=S.r[cur.r][sel.d][sel.p];h+='<div class="card"><h3>'+esc(cur.r)+" 週"+DAYS[sel.d]+"第"+(sel.p+1)+'節</h3><div class="bar"><select id="rcs">'+C.map(c=>"<option>"+esc(c)+"</option>").join("")+'</select><button class="b p" data-a="radd">加入使用班級</button>'+cell.map(c=>'<button class="b" data-a="rdel" data-x="'+esc(c)+'">移除 '+esc(lb(c))+"</button>").join("")+'<button class="b" data-a="cancel">關閉</button></div></div>'}
+h+='<div class="tag" style="margin-top:8px">這裡是週課表。要看某一天（含調課後）的教室使用，請到「節次查詢」選日期。</div>'}
+if(V=="log"){const L=S.log,f=cur.lf||"",rows=L.filter(e=>!f||e.c.split("、").includes(f)).slice().reverse(),te=cur.tk&&L.find(e=>e.id==cur.tk);
+h+=okM()+'<div class="bar"><select data-k="lf">'+opts(C,f,true)+"</select><span>共 "+L.length+' 筆</span><button class="b" data-a="tsv">匯出全部紀錄</button></div>';
+if(te)h+='<div class="card"><h3>調課單（可全選複製）</h3><textarea readonly style="height:190px">'+esc(tkt(te))+'</textarea><div class="bar"><button class="b" data-a="xc">關閉</button></div></div>';
+if(cur.tsv)h+='<div class="card"><h3>全部紀錄（可全選複製，貼到 Excel 或 Google 試算表）</h3><textarea readonly>'+esc(tsv())+'</textarea><div class="bar"><button class="b" data-a="xc">關閉</button></div></div>';
+h+=rows.length?'<div class="w"><table><tr><th>編號／申請時間</th><th>班級</th><th>調課日期</th><th>調整內容</th><th>涉及教師</th><th>原因</th><th>申請人</th><th></th></tr>'+rows.map(e=>{const del=cur.rm==e.id,ov=e.k=="app"?ovl(e):[];
+return"<tr><td>"+esc(e.no)+'<small class="tag"><br>'+esc(e.t)+"</small></td><td>"+esc(e.c)+"</td><td>"+(e.k=="app"?e.dt.map(x=>esc(dfull(x))).join("<br>"):'<small class="tag">舊版紀錄</small>')+'</td><td style="text-align:left">'+(e.k=="app"?e.steps.map(s=>"<div>"+esc(stepText(s))+"</div>").join(""):esc(desc(e)))+"</td><td>"+esc(e.tc.join("、"))+'</td><td><input data-lr="'+e.id+'" value="'+esc(e.r||"")+'" placeholder="補填原因"></td><td><input data-lw="'+e.id+'" value="'+esc(e.w||"")+'" size="6"></td><td>'+(del?'<div class="tag">'+(e.k=="app"?"刪除後這筆調課取消，課表回到原樣。":"舊版紀錄：只會移除紀錄，不會改動週課表。")+(ov.length?"<br>注意：和 "+ov.map(x=>x.no).join("、")+" 有重疊的節次，刪除後那些申請的結果可能改變。":"")+'</div><button class="b p" data-a="rmy">確定刪除</button><button class="b" data-a="rmn">取消</button>':'<button class="b" data-a="tk" data-x="'+e.id+'">調課單</button><button class="b" data-a="rm" data-x="'+e.id+'">刪除申請</button>')+"</td></tr>"}).join("")+"</table></div>":'<div class="card">還沒有調課申請。在「班級課表」按「調課」選兩節，加入草稿後送出，就會記在這裡。</div>'}
+if(V=="manage"){const k=S.c[cur.c],used=k?[...new Set(k.g.flat().filter(Boolean))].sort():[];
+h+=conflictBar(I.list)+'<div class="bar"><select data-k="c">'+opts(C,cur.c)+'</select></div><div class="card"><h3>'+esc(cur.c)+' 導師與科任教師</h3><div class="kv"><label><span>導師</span><input data-hr="1" value="'+esc(k?k.hr:"")+'"></label>'+used.map(s=>'<label><span>'+esc(s)+'</span><input data-sj="'+esc(s)+'" value="'+esc(k.t[s]||"")+'" placeholder="空白＝導師"></label>').join("")+"</div></div>"+
+'<div class="card"><h3>新增班級</h3><div class="bar"><input id="nc" placeholder="例如：二年一班"><input id="nh" placeholder="導師姓名"><button class="b p" data-a="add">新增</button><button class="b" data-a="del">刪除目前班級</button></div></div>'+
+'<div class="card"><h3>資料備份與匯入</h3><p class="tag">資料自動存在此瀏覽器（含調課申請）。需要備份或換電腦時，複製下方 JSON；貼上 JSON 後按「套用」即可還原。</p><textarea id="js">'+esc(JSON.stringify(S))+'</textarea><div class="bar"><button class="b p" data-a="imp">套用</button><button class="b" data-a="rst">還原為初始資料</button></div></div>'}
+document.getElementById("main").innerHTML=h}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-v],[data-cell],[data-a],[data-rc]");if(!t)return;
+if(t.dataset.v){V=t.dataset.v;sel=null;swap=false;msg=""}
+else if(t.dataset.cell){const[dt,ps]=t.dataset.cell.split(","),p=+ps;
+if(swap){if(!sel||sel.c!=cur.c||sel.edit)sel={c:cur.c,dt,p};else if(sel.dt==dt&&sel.p==p)sel=null;else{msg=addSw(cur.c,{d:sel.dt,p:sel.p},{d:dt,p})||"已加入調課草稿，請在上方確認後送出申請";sel=null}}
+else{if(cur.ms.length)msg="有尚未送出的調課草稿，請先送出或清空，再修改週課表";else{sel={c:cur.c,dt,p,edit:1};msg=""}}}
+else if(t.dataset.rc){const[d,p]=t.dataset.rc.split(",").map(Number);sel={d,p}}
+else{const a=t.dataset.a,g=S.c[cur.c]&&S.c[cur.c].g;
+if(a=="swap"){swap=!swap;sel=null;msg=""}
+if(a=="cancel")sel=null;
+if(a=="wp")cur.wk=addD(cur.wk,-7);
+if(a=="wn")cur.wk=addD(cur.wk,7);
+if(a=="dx")cur.ms.splice(+t.dataset.x,1);
+if(a=="dc")cur.ms=[];
+if(a=="ds"&&cur.ms.length){const st=cur.ms.slice(),e2=Object.assign(stamp(),{k:"app",c:clsOf(st),steps:st,tc:tcs(st),dt:datesOf(st),r:cur.reason||"",w:cur.who||""});S.log.push(e2);cur.ms=[];cur.reason="";swap=false;msg="已送出調課申請 "+e2.no+"（調課日期："+e2.dt.map(dlab).join("、")+"）";save()}
+if(a=="find"){const tc=cur.ft?(()=>{const E=eng(cur.ms);return cls().find(c=>E.gl(c,cur.fdt,cur.fp)&&E.gt(c,cur.fdt,cur.fp)==cur.ft)})():cur.fc;
+if(!tc||!S.c[tc]||wd(cur.fdt)<0||!eng(cur.ms).gl(tc,cur.fdt,cur.fp))cur.sol={res:[],n:0,none:1};else{const r=search(tc,{d:cur.fdt,p:cur.fp},cur.win,cur.fx=="x");r.sort((x,y)=>x.length-y.length);cur.sol={res:r}}}
+if(a=="ap"&&cur.sol){const st=cur.sol.res[+t.dataset.x];if(st){cur.ms=cur.ms.concat(st);cur.sol=null;V="class";cur.c=st[0].c;cur.wk=mon(st[0].a.d);msg="已加入調課草稿（"+st.length+" 步），請確認衝堂提示後送出申請"}}
+if(a=="mx"&&cur.mu){const x=t.dataset.x,s=(x[0]=="a"?cur.mu.A:cur.mu.B)[+x.slice(1)];if(s){cur.ms.push(s);msg="已加入調課草稿，請在上方確認後送出申請"}}
+if(a=="tk")cur.tk=+t.dataset.x,cur.tsv=false;
+if(a=="tsv")cur.tsv=true,cur.tk=null;
+if(a=="xc")cur.tk=null,cur.tsv=false;
+if(a=="rm")cur.rm=+t.dataset.x;
+if(a=="rmn")cur.rm=null;
+if(a=="rmy"){const i=S.log.findIndex(x=>x.id==cur.rm);if(i>=0){msg=S.log[i].k=="app"?"已刪除調課申請 "+S.log[i].no+"，課表已回到未調課的狀態":"已刪除舊版紀錄 "+S.log[i].no;S.log.splice(i,1)}cur.rm=null;save()}
+if(a=="radd"){const c=document.getElementById("rcs").value,cell=S.r[cur.r][sel.d][sel.p];if(c&&!cell.includes(c)){cell.push(c);save()}}
+if(a=="rdel"){const cell=S.r[cur.r][sel.d][sel.p],i=cell.indexOf(t.dataset.x);if(i>=0){cell.splice(i,1);save()}}
+if(a=="set"){const w=wd(sel.dt),v=document.getElementById("ns").value.trim(),o=g[w][sel.p];if(v!=o){const e2=Object.assign(stamp(),{k:"edit",c:cur.c,a:{d:w,p:sel.p,s:o,t:tOf(cur.c,o)},b:{d:w,p:sel.p,s:v,t:tOf(cur.c,v)},r:"",w:""});e2.tc=[...new Set([e2.a.t,e2.b.t].filter(Boolean))];S.log.push(e2);msg="已修改週課表，已記入紀錄 "+e2.no}g[w][sel.p]=v;sel=null;save()}
+if(a=="clr"){const w=wd(sel.dt),o=g[w][sel.p];if(o){const e2=Object.assign(stamp(),{k:"edit",c:cur.c,a:{d:w,p:sel.p,s:o,t:tOf(cur.c,o)},b:{d:w,p:sel.p,s:"",t:""},r:"",w:""});e2.tc=[e2.a.t].filter(Boolean);S.log.push(e2);msg="已清空，已記入紀錄 "+e2.no}g[w][sel.p]="";sel=null;save()}
+if(a=="add"){const n=document.getElementById("nc").value.trim(),h2=document.getElementById("nh").value.trim();if(n&&!S.c[n]){S.c[n]={hr:h2,t:{},g:DAYS.map(()=>PER.map(()=>""))};cur.c=n;save()}}
+if(a=="del"&&confirm("確定刪除 "+cur.c+" 的課表？")){for(const r in S.r)S.r[r].forEach(dy=>dy.forEach(ce=>{const i=ce.indexOf(cur.c);if(i>=0)ce.splice(i,1)}));delete S.c[cur.c];cur.c="";save()}
+if(a=="imp"){try{const o=JSON.parse(document.getElementById("js").value);if(!o.c)throw 0;S=o;if(!S.r)S.r=JSON.parse(JSON.stringify(SEED.r));if(!S.log)S.log=[];save();msg="已匯入"}catch(x){alert("JSON 格式不正確")}}
+if(a=="rst"&&confirm("還原後會清除所有修改與調課申請，確定嗎？")){S=JSON.parse(JSON.stringify(SEED));S.v=10;S.log=[];cur.ms=[];save()}}
+render()});
+document.addEventListener("change",e=>{const t=e.target;
+if(t.dataset.k){const k=t.dataset.k;cur[k]=["p","fp","pp","win","sm"].includes(k)?+t.value:t.value;if(["fdt","pdt"].includes(k)&&!t.value)return;sel=null;msg="";if(k=="ft"||k=="fc"||k=="fdt"||k=="fp"||k=="win"||k=="fx")cur.sol=null}
+else if(t.dataset.wk){if(t.value)cur.wk=mon(t.value);else return}
+else if(t.dataset.hr){S.c[cur.c].hr=t.value.trim();save()}
+else if(t.dataset.sj){const v=t.value.trim();if(v)S.c[cur.c].t[t.dataset.sj]=v;else delete S.c[cur.c].t[t.dataset.sj];save()}
+else if(t.dataset.rs){cur.reason=t.value;return}
+else if(t.dataset.who){cur.who=t.value;return}
+else if(t.dataset.lr||t.dataset.lw){const e2=S.log.find(x=>x.id==(t.dataset.lr||t.dataset.lw));if(e2){if(t.dataset.lr)e2.r=t.value.trim();else e2.w=t.value.trim();save()}return}
+else return;render()});
+render();
+</script>
+</body>
+</html>
