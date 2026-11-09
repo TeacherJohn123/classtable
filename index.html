@@ -112,17 +112,18 @@ const RM={
 "中型會議室":["#五阿美,#三阿美,,,,,",",,,,,,","#三越南,#一越南,#二越南,#五越南,,,",",,,,,,",",,,,,,"]};
 const rd=s=>s.split(",").map(x=>x?x.split("+").map(c=>c[0]=="#"?c:CN[c[0]-1]+"年"+CN[c[1]-1]+"班"):[]);
 SEED.r={};for(const n in RM)SEED.r[n]=RM[n].map(rd);
+SEED.busy=[{t:"胡魁",d:0,p:5,l:"賽考利克泰雅語直播共學"},{t:"余安麗",d:0,p:4,l:"拉阿魯哇語直播共學"},{t:"莊琬婷",d:0,p:1,l:"英語跨域（202）"},{t:"莊琬婷",d:0,p:2,l:"英語跨域（204）"},{t:"莊琬婷",d:0,p:3,l:"英語跨域（205）"},{t:"莊琬婷",d:2,p:3,l:"英語跨域（206）"},{t:"莊琬婷",d:3,p:3,l:"英語跨域（201）"},{t:"莊琬婷",d:4,p:0,l:"英語跨域（203）"}];
 let S,V="class",sel=null,swap=false,msg="",cur={c:"",t:"",s:"",ms:[],win:0,sm:1,pp:0,fp:0};
 try{const x=localStorage.getItem("tt115");S=x?JSON.parse(x):null}catch(e){}
 if(!S||!S.c)S=JSON.parse(JSON.stringify(SEED));
 const save=()=>{try{localStorage.setItem("tt115",JSON.stringify(S))}catch(e){}};
-if(!S.v||S.v<10){for(const n in SEED.c)if(!S.c[n])S.c[n]=JSON.parse(JSON.stringify(SEED.c[n]));
+if(!S.v||S.v<12){for(const n in SEED.c)if(!S.c[n])S.c[n]=JSON.parse(JSON.stringify(SEED.c[n]));
 const k5=S.c["二年五班"];if(k5&&k5.t["生活"]=="楊慈蓮")k5.t["生活"]="楊慧蓮";
 for(const n in S.c){const t=S.c[n].t;for(const k in t)if(t[k]=="胡魏")t[k]="胡魁"}
 if(!S.r)S.r=JSON.parse(JSON.stringify(SEED.r));if(!S.log)S.log=[];
 const lb=S.r["圖書館"];if(lb&&lb[0][6].includes("五年五班")&&!lb[0][0].includes("五年五班")){lb[0][6].splice(lb[0][6].indexOf("五年五班"),1);lb[0][0].push("五年五班")}
-S.v=10;save()}
-if(!S.log)S.log=[];
+if(!S.roles)S.roles={教學組長:"",教務主任:"",校長:""};if(!S.busy)S.busy=JSON.parse(JSON.stringify(SEED.busy));S.v=12;save()}
+if(!S.log)S.log=[];if(!S.roles)S.roles={教學組長:"",教務主任:"",校長:""};if(!S.busy)S.busy=JSON.parse(JSON.stringify(SEED.busy));
 const q2=x=>String(x).padStart(2,"0"),pd=s=>{const a=s.split("-").map(Number);return new Date(a[0],a[1]-1,a[2])},fd=x=>x.getFullYear()+"-"+q2(x.getMonth()+1)+"-"+q2(x.getDate()),
 addD=(s,n)=>{const x=pd(s);x.setDate(x.getDate()+n);return fd(x)},wd=s=>{const w=pd(s).getDay();return w>=1&&w<=5?w-1:-1},mon=s=>addD(s,-((pd(s).getDay()+6)%7)),
 WK="日一二三四五六",dlab=s=>{const x=pd(s);return (x.getMonth()+1)+"/"+x.getDate()+"(週"+WK[x.getDay()]+")"},dfull=s=>s.replace(/-/g,"/")+"(週"+WK[pd(s).getDay()]+")",today=fd(new Date());
@@ -154,11 +155,12 @@ function eng(ex){const E={L:new Map(),R:new Map(),T:new Map()};
 E.gl=(c,dt,p)=>{const k=key(c,dt,p);if(E.L.has(k))return E.L.get(k);const w=wd(dt);return w>=0&&S.c[c]?S.c[c].g[w][p]:""};
 E.gr=(c,dt,p)=>{const k=key(c,dt,p);if(E.R.has(k))return E.R.get(k);const w=wd(dt);return w>=0?(Object.keys(S.r).find(r=>S.r[r][w][p].includes(c))||""):""};
 E.gt=(c,dt,p)=>{const k=key(c,dt,p);return E.T.has(k)?E.T.get(k):tOf(c,E.gl(c,dt,p))};
-for(const e of S.log)if(e.k=="app")for(const s of e.steps)ap(E,s);
+for(const e of S.log)if(e.k=="app"&&!stt(e).no)for(const s of e.steps)ap(E,s);
 for(const s of ex||[])ap(E,s);return E}
 function iss(E,dt){const o=[];if(wd(dt)<0)return o;
 for(let p=0;p<7;p++){const m={},rm={};for(const c in S.c){const s=E.gl(c,dt,p);if(!s)continue;const t=E.gt(c,dt,p);(m[t]=m[t]||[]).push(c);const r=E.gr(c,dt,p);if(r)(rm[r]=rm[r]||[]).push(c)}
-for(const t in m)if(m[t].length>1)o.push({s:dlab(dt)+"第"+(p+1)+"節 教師"+t+"衝堂："+m[t].join("、"),cs:m[t],dt,p});
+for(const b of S.busy||[])if(b.d==wd(dt)&&b.p==p)(m[b.t]=m[b.t]||[]).push("＊"+b.l);
+for(const t in m)if(m[t].length>1)o.push({s:dlab(dt)+"第"+(p+1)+"節 教師"+t+"衝堂："+m[t].map(x=>x[0]=="＊"?x.slice(1)+"（固定時段）":x).join("、"),cs:m[t].filter(x=>x[0]!="＊"),dt,p});
 for(const r in rm)if(rm[r].length>(RCAP[r]||1))o.push({s:dlab(dt)+"第"+(p+1)+"節 "+r+"超過容量："+rm[r].join("、"),cs:rm[r],dt,p})}
 return o}
 const dn=(d,p)=>"週"+DAYS[d]+"第"+(p+1)+"節",cs=(s,t)=>(s||"無課")+"("+(t||"-")+")";
@@ -172,12 +174,17 @@ function stamp(){const n=new Date(),ds=fd(n);return{id:(S.lid=(S.lid||0)+1),no:"
 function addSw(c,a,b){const E=eng(cur.ms);if(wd(a.d)<0||wd(b.d)<0)return"只能選星期一到五的日期";if(a.d==b.d&&a.p==b.p)return"請選兩個不同的節次";
 const la=E.gl(c,a.d,a.p),lb=E.gl(c,b.d,b.p);if(!la||!lb)return"其中一節沒有課，無法對調";
 cur.ms.push({k:"sw",c,a:{d:a.d,p:a.p,s:la,t:E.gt(c,a.d,a.p)},b:{d:b.d,p:b.p,s:lb,t:E.gt(c,b.d,b.p)}});return""}
+function mkSw(c,a,b,ms){const E=eng(ms);if(wd(a.d)<0||wd(b.d)<0)return{err:"只能選星期一到五的日期"};if(a.d==b.d&&a.p==b.p)return{err:"節點不可重複"};
+const la=E.gl(c,a.d,a.p),lb=E.gl(c,b.d,b.p);if(!la||!lb)return{err:"這一節沒有課（"+dlab(la?b.d:a.d)+"第"+((la?b.p:a.p)+1)+"節）"};
+return{s:{k:"sw",c,a:{d:a.d,p:a.p,s:la,t:E.gt(c,a.d,a.p)},b:{d:b.d,p:b.p,s:lb,t:E.gt(c,b.d,b.p)}}}}
+function wzPlan(){const z=cur.wz,n=z.nodes;for(let i=0;i<n.length;i++)for(let j=i+1;j<n.length;j++)if(n[i].d==n[j].d&&n[i].p==n[j].p)return{err:"節點 "+"ABCDE"[i]+" 和 "+"ABCDE"[j]+" 是同一節，請改成不同的節次"};
+const tmp=cur.ms.slice(),st=[];for(let i=1;i<n.length;i++){const r=mkSw(z.c,n[0],n[i],tmp);if(r.err)return{err:"節點 "+("ABCDE"[i])+"："+r.err};tmp.push(r.s);st.push(r.s)}return{st}}
 function newIss(st){const E0=eng([]),E1=eng(st),o=[];for(const dt of datesOf(st)){const b=new Set(iss(E0,dt).map(x=>x.s));iss(E1,dt).forEach(x=>{if(!b.has(x.s))o.push(x.s)})}return o}
 function draftBar(){const st=cur.ms;if(!st.length)return"";const ni=newIss(st);
 return'<div class="card" style="border-color:var(--ac)"><h3>調課草稿（'+st.length+' 步，尚未送出）</h3><ol style="margin:4px 0 8px;padding-left:22px">'+st.map((s,i)=>"<li>"+esc(stepText(s))+' <button class="b" data-a="dx" data-x="'+i+'">移除</button></li>').join("")+"</ol>"+
-'<div class="tag">調課日期：'+esc(datesOf(st).map(dfull).join("、"))+"；涉及教師："+esc(tcs(st).join("、")||"-")+"</div>"+
+'<div class="tag">調課日期：'+esc(datesOf(st).map(dfull).join("、"))+"；涉及教師："+esc(tcs(st).join("、")||"-")+"</div>"+'<div class="tag">簽核流程：'+esc(mkFlow(tcs(st),cur.who).map(lab).join(" → "))+"（申請人請填老師姓名，系統才能判斷誰是被調課老師）</div>"+
 (ni.length?'<div class="warn" style="margin-top:8px"><b>送出後會新增 '+ni.length+" 筆衝堂</b><br>"+ni.map(esc).join("<br>")+"</div>":'<div class="ok" style="margin-top:8px">送出後沒有新增的教師或教室衝堂</div>')+
-'<div class="bar"><input data-rs="1" value="'+esc(cur.reason||"")+'" placeholder="調課原因（會記入申請）" style="flex:1;min-width:170px"><input data-who="1" value="'+esc(cur.who||"")+'" placeholder="申請人" size="8"><button class="b p" data-a="ds">'+(ni.length?"仍要送出（有衝堂）":"送出調課申請")+'</button><button class="b" data-a="dc">清空草稿</button></div></div>'}
+'<div class="bar"><input data-rs="1" value="'+esc(cur.reason||"")+'" placeholder="調課原因（會記入申請）" style="flex:1;min-width:170px"><input data-who="1" value="'+esc(cur.who||"")+'" placeholder="申請人（老師姓名）" size="12" list="tl"><datalist id="tl">'+(cur.T||[]).map(x=>"<option>"+esc(x)+"</option>").join("")+'</datalist><button class="b p" data-a="ds">'+(ni.length?"仍要送出（有衝堂）":"送出調課申請")+'</button><button class="b" data-a="dc">清空草稿</button></div></div>'}
 function search(c,A,win,cross){const T0=Date.now(),res=[],seen=new Set(),fc={},E=eng(cur.ms),mo=mon(A.d),dates=[];
 for(let o=win==2?-7:0;o<=(win>=1?7:0);o+=7)for(let i=0;i<5;i++)dates.push(addD(mo,o+i));
 const base={};dates.forEach(dt=>base[dt]=new Set(iss(E,dt).map(x=>x.s)));
@@ -192,38 +199,77 @@ if(!b.length){if(ns.length==K&&(!cross||new Set(ns.map(s=>s.c)).size>1)){const k
 else if(ns.length<K){const dn2=new Set();for(const it of b)for(const cc of it.cs){const kk=cc+it.dt+it.p;if(dn2.has(kk))continue;dn2.add(kk);go(ns,K,cc,{d:it.dt,p:it.p})}}
 ap(E,s1)}}
 for(let K=cross?2:1;K<=3&&res.length<8;K++)go([],K,c,{d:A.d,p:A.p});return res}
+const bzy=(t,dt,p)=>(S.busy||[]).some(b=>b.t==t&&b.d==wd(dt)&&b.p==p);
 function mutual(me,ot,dates,same){const E=eng(cur.ms),mine=[],th=[];
 for(const dt of dates)for(let p=0;p<7;p++)for(const c of cls()){const s=E.gl(c,dt,p);if(!s)continue;const t=E.gt(c,dt,p);if(t==me)mine.push({c,dt,p,s});if(t==ot)th.push({c,dt,p,s})}
 const base={};dates.forEach(dt=>base[dt]=new Set(iss(E,dt).map(x=>x.s)));const A=[],B=[];
 for(const m of mine)for(const x of th){if(m.dt==x.dt&&m.p==x.p)continue;
 if(m.c==x.c&&A.length<40){const s1={k:"sw",c:m.c,a:{d:m.dt,p:m.p,s:m.s,t:me},b:{d:x.dt,p:x.p,s:x.s,t:ot}};ap(E,s1);let ok=true;for(const dt of new Set([m.dt,x.dt]))iss(E,dt).forEach(z=>{if(!base[dt].has(z.s))ok=false});ap(E,s1);if(ok)A.push(s1)}
-if(B.length<40&&(!same||m.s==x.s)&&!th.some(y=>y.dt==m.dt&&y.p==m.p)&&!mine.some(y=>y.dt==x.dt&&y.p==x.p))B.push({k:"tx",c:m.c,c2:x.c,a:{d:m.dt,p:m.p,s:m.s,t:me},b:{d:x.dt,p:x.p,s:x.s,t:ot}})}
+if(B.length<40&&(!same||m.s==x.s)&&!th.some(y=>y.dt==m.dt&&y.p==m.p)&&!mine.some(y=>y.dt==x.dt&&y.p==x.p)&&!bzy(ot,m.dt,m.p)&&!bzy(me,x.dt,x.p))B.push({k:"tx",c:m.c,c2:x.c,a:{d:m.dt,p:m.p,s:m.s,t:me},b:{d:x.dt,p:x.p,s:x.s,t:ot}})}
 return{A,B,n:[mine.length,th.length]}}
+const OFF=["教學組長","教務主任","校長"];
+const lab=f=>f.k=="t"?"被調課老師 "+f.t:f.r+((S.roles||{})[f.r]?" "+S.roles[f.r]:"");
+function mkFlow(tc,w){return tc.filter(t=>!(w||"").includes(t)).map(t=>({k:"t",t,d:"",at:"",note:""})).concat(OFF.map(r=>({k:"o",r,d:"",at:"",note:""})))}
+function stt(e){if(!e.fl)return{s:"舊申請（無簽核紀錄）",ok:1,no:0,next:[]};
+const no=e.fl.find(f=>f.d=="no");if(no)return{s:"已退回（"+lab(no)+"）",ok:0,no:1,next:[]};
+const i=e.fl.findIndex(f=>f.d!="ok");if(i<0)return{s:"已核准",ok:1,no:0,next:[]};
+const nx=e.fl[i].k=="t"?e.fl.filter(f=>f.k=="t"&&f.d!="ok"):[e.fl[i]];return{s:"待簽核："+nx.map(lab).join("、"),ok:0,no:0,next:nx}}
+const waits=(e,w)=>e.k=="app"&&stt(e).next.some(f=>f.k=="t"?f.t==w:f.r==w);
+function pendKeys(){const s=new Set();S.log.forEach(e=>{if(e.k=="app"&&e.fl){const t=stt(e);if(!t.ok&&!t.no)keys(e).forEach(k=>s.add(k))}});return s}
+function flowHtml(e){if(e.k!="app")return'<span class="tag">—</span>';
+if(!e.fl)return'<span class="tag">舊申請（無簽核紀錄）</span><br><button class="b" data-a="sgs" data-x="'+e.id+'">啟動簽核流程</button>';
+const s=stt(e);let h='<div><b>'+esc(s.s)+"</b></div>"+e.fl.map(f=>"<div class='tag'>"+(f.d=="ok"?"✓ ":f.d=="no"?"✗ ":"○ ")+esc(lab(f))+(f.d?" "+esc(f.at.slice(5))+(f.note?"（"+esc(f.note)+"）":""):"")+"</div>").join("");
+if(cur.sg==e.id&&s.next.length)h+='<div class="card" style="margin:6px 0;padding:8px">'+(s.next.length>1?'<select data-k="sgi">'+s.next.map((f,i)=>"<option value="+i+(i==(cur.sgi||0)?" selected":"")+">"+esc(lab(f))+"</option>").join("")+"</select>":"<div class='tag'>"+esc(lab(s.next[0]))+"</div>")+'<input data-fnote="1" value="'+esc(cur.fnote||"")+'" placeholder="意見（可不填）"><div class="bar"><button class="b p" data-a="sgy">同意</button><button class="b" data-a="sgn">退回</button><button class="b" data-a="sgx">取消</button></div></div>';
+else{if(s.next.length)h+='<button class="b" data-a="sg" data-x="'+e.id+'">記錄簽核</button>';if(e.fl.some(f=>f.d))h+='<button class="b" data-a="sgr" data-x="'+e.id+'">重設簽核</button>'}
+return h}
+const subs=(I,t)=>[...new Set(I.A.filter(a=>a.t==t).map(a=>a.s))],cl2=(I,t)=>[...new Set(I.A.filter(a=>a.t==t).map(a=>a.c))];
+function whyA(I){const sh=cl2(I,cur.me).filter(c=>cl2(I,cur.ot).includes(c));
+return sh.length?"兩位老師有共同任教的班級（"+sh.join("、")+"），但在選定的範圍內，互換都會造成教師或教室衝堂。可以試試把範圍放寬到「本週與下週」。":"兩位老師沒有共同任教的班級（"+cur.me+"："+(cl2(I,cur.me).join("、")||"無")+"；"+cur.ot+"："+(cl2(I,cur.ot).join("、")||"無")+"），所以沒有同班互換。"}
+function whyB(I){return cur.sm==1?"目前「只列相同科目」：我教 "+(subs(I,cur.me).join("、")||"無")+"，對方教 "+(subs(I,cur.ot).join("、")||"無")+"，沒有相同的科目或沒有符合的空堂。若要列出不同科目的互換，可改選「不限科目」，但不同科目的老師互相代課通常不可行。":"在選定的範圍內，找不到「對方在我的課那一節沒課、我在對方的課那一節也沒課」的時段。可以把範圍放寬到「本週與下週」。"}
 const keys=e=>e.steps.flatMap(s=>s.k=="tx"?[key(s.c,s.a.d,s.a.p),key(s.c2,s.b.d,s.b.p)]:[key(s.c,s.a.d,s.a.p),key(s.c,s.b.d,s.b.p)]);
 const ovl=e=>{const ks=new Set(keys(e));return S.log.filter(x=>x.k=="app"&&x.id!=e.id&&keys(x).some(k=>ks.has(k)))};
-const tkt=e=>(e.k=="app"?["調課單　編號："+e.no,"申請日期："+e.t,"班級："+e.c,"調課日期："+e.dt.map(dfull).join("、"),"調整內容："].concat(e.steps.map((s,i)=>"　"+(i+1)+". "+stepText(s))):["調課單　編號："+e.no,"申請日期："+e.t,"班級："+e.c,"調整內容："+desc(e)]).concat(["涉及教師："+(e.tc.join("、")||"-"),"調課原因："+(e.r||"（未填）"),"申請人："+(e.w||"（未填）"),"","教務處核准：＿＿＿＿＿＿　　日期：＿＿＿＿＿＿"]).join("\n");
-const tsv=()=>["編號\t申請時間\t班級\t類型\t調課日期\t調整內容\t涉及教師\t原因\t申請人"].concat(S.log.map(e=>[e.no,e.t,e.c,e.k=="app"?"調課申請":"舊版:"+({swap:"對調",edit:"週課表修改",undo:"還原",multi:"多角調動"}[e.k]||""),e.k=="app"?e.dt.map(dfull).join("、"):"",desc(e),e.tc.join("、"),e.r,e.w].map(x=>String(x||"").replace(/[\t\n]/g," ")).join("\t"))).join("\n");
+const tkt=e=>(e.k=="app"?["調課單　編號："+e.no,"申請日期："+e.t,"班級："+e.c,"調課日期："+e.dt.map(dfull).join("、"),"調整內容："].concat(e.steps.map((s,i)=>"　"+(i+1)+". "+stepText(s))):["調課單　編號："+e.no,"申請日期："+e.t,"班級："+e.c,"調整內容："+desc(e)]).concat(["涉及教師："+(e.tc.join("、")||"-"),"調課原因："+(e.r||"（未填）"),"申請人："+(e.w||"（未填）"),""]).concat(e.fl?["簽核流程（依序）："].concat(e.fl.map((f,i)=>"　"+(i+1)+". "+lab(f)+"："+(f.d=="ok"?"同意　"+f.at+(f.note?"（"+f.note+"）":""):f.d=="no"?"退回　"+f.at+(f.note?"（"+f.note+"）":""):"＿＿＿＿＿＿　日期：＿＿＿＿＿＿"))):["教務處核准：＿＿＿＿＿＿　　日期：＿＿＿＿＿＿"]).join("\n");
+const tsv=()=>["編號\t申請時間\t班級\t類型\t調課日期\t調整內容\t涉及教師\t原因\t申請人\t簽核狀態"].concat(S.log.map(e=>[e.no,e.t,e.c,e.k=="app"?"調課申請":"舊版:"+({swap:"對調",edit:"週課表修改",undo:"還原",multi:"多角調動"}[e.k]||""),e.k=="app"?e.dt.map(dfull).join("、"):"",desc(e),e.tc.join("、"),e.r,e.w,e.k=="app"?stt(e).s:""].map(x=>String(x||"").replace(/[\t\n]/g," ")).join("\t"))).join("\n");
 const weekBar=()=>'<button class="b" data-a="wp">‹ 上週</button><input type="date" data-wk="1" value="'+cur.wk+'"><button class="b" data-a="wn">下週 ›</button><span class="tag">'+dfull(cur.wk)+" – "+dlab(addD(cur.wk,4))+"</span>";
 const dayOpts=(k,v)=>'<input type="date" data-k="'+k+'" value="'+v+'">',perOpts=(k,v)=>'<select data-k="'+k+'">'+PER.map((x,i)=>"<option value="+i+(i==v?" selected":"")+">第"+x+"節 "+PT[i]+"</option>").join("")+"</select>",
 winOpts=v=>'<select data-k="win">'+["同一週","本週與下週","前後各一週"].map((x,i)=>"<option value="+i+(i==v?" selected":"")+">"+x+"</option>").join("")+"</select>";
+function rotCard(){const n=cur.rn&&cur.rn.length&&cur.rn[0].c==cur.c?cur.rn:[],L2="ABCDE";
+let h='<div class="card" style="border-color:var(--ac)"><h3>輪調：依序點選節點（'+esc(cur.c)+'）</h3><p class="tag">在下方課表依序點 A、B、C…（3 到 5 節）。可用上方的日期或「上週／下週」切換週次，跨週選取。再點一次已選的節次可取消。輪調結果：A 的課移到 B 的時段，B 的課移到 C 的時段……最後回到 A 的時段。</p>';
+const bt='<div class="bar"><button class="b" data-a="rc">清除選取</button><button class="b" data-a="rx">結束輪調模式</button></div></div>';
+if(!n.length)return h+'<div class="tag">尚未選取節次</div>'+bt;
+const E=eng(cur.ms);h+='<ol style="margin:6px 0;padding-left:22px">'+n.map((x,i)=>"<li>節點 "+L2[i]+"："+esc(dlab(x.d)+"第"+(x.p+1)+"節 "+(E.gl(x.c,x.d,x.p)||"沒有課"))+" → 移到節點 "+L2[(i+1)%n.length]+"</li>").join("")+"</ol>";
+if(n.length<3)return h+'<div class="tag">至少選 3 節才能輪調（2 節請用「調課」對調）。</div>'+bt;
+const keep=cur.wz;cur.wz={c:cur.c,nodes:n};const pl=wzPlan();cur.wz=keep;
+if(pl.err)return h+'<div class="warn">'+esc(pl.err)+"</div>"+bt;
+const ni=newIss(cur.ms.concat(pl.st));
+return h+(ni.length?'<div class="warn"><b>加入後會新增 '+ni.length+" 筆衝堂</b><br>"+ni.map(esc).join("<br>")+"</div>":'<div class="ok">加入後沒有新增的教師或教室衝堂</div>')+'<div class="bar"><button class="b p" data-a="rg">加入調課草稿（'+pl.st.length+' 步）</button><button class="b" data-a="rc">清除選取</button><button class="b" data-a="rx">結束輪調模式</button></div></div>'}
+function wzCard(C){const z=cur.wz,E=eng(cur.ms),pl=wzPlan(),L2="ABCDE";
+const ls=z.nodes.map(n=>wd(n.d)<0?"":E.gl(z.c,n.d,n.p));
+let h='<div class="card" style="border-color:var(--ac)"><h3>多角調動精靈（同一班 3 節以上輪調）</h3><p class="tag">選一個班，依序指定節點 A、B、C…（日期可跨週）。輪調結果：A 的課移到 B 的時段，B 的課移到 C 的時段……最後一個節點的課移回 A 的時段。系統會自動換算成對調步驟，加入草稿。要跨班連鎖時，加入後換另一個班再做一次即可。</p><div class="bar"><select data-wzc="1">'+opts(C,z.c)+'</select><button class="b" data-a="wza">增加節點</button><button class="b" data-a="wzr">減少節點</button></div>';
+h+=z.nodes.map((n,i)=>'<div class="bar"><b>'+L2[i]+'</b><input type="date" data-wzd="'+i+'" value="'+n.d+'"><select data-wzp="'+i+'">'+PER.map((x,j)=>"<option value="+j+(j==n.p?" selected":"")+">第"+x+"節 "+PT[j]+"</option>").join("")+'</select><span class="tag">'+(ls[i]?esc(ls[i]+"（"+E.gt(z.c,n.d,n.p)+"）"):"沒有課")+"</span></div>").join("");
+if(pl.err)return h+'<div class="warn">'+esc(pl.err)+"</div></div>";
+const ni=newIss(cur.ms.concat(pl.st));
+h+='<ol style="margin:6px 0;padding-left:22px">'+z.nodes.map((n,i)=>"<li>節點 "+L2[i]+"："+esc(dlab(n.d)+"第"+(n.p+1)+"節 "+ls[i])+" → 移到節點 "+L2[(i+1)%z.nodes.length]+"（"+esc(dlab(z.nodes[(i+1)%z.nodes.length].d)+"第"+(z.nodes[(i+1)%z.nodes.length].p+1)+"節")+"）</li>").join("")+"</ol>";
+h+=ni.length?'<div class="warn"><b>加入後會新增 '+ni.length+" 筆衝堂</b><br>"+ni.map(esc).join("<br>")+"</div>":'<div class="ok">加入後沒有新增的教師或教室衝堂</div>';
+return h+'<div class="bar"><button class="b p" data-a="wzg">加入調課草稿（'+pl.st.length+' 步）</button><button class="b" data-a="wz">關閉</button></div></div>'}
 function render(){
 const I=info(),T=teachers(I.A),Sb=subjects(I.A),C=cls();
 if(!cur.c||!S.c[cur.c])cur.c=C[0]||"";if(!cur.t||!T.includes(cur.t))cur.t=T[0]||"";if(!cur.s||!Sb.includes(cur.s))cur.s=Sb[0]||"";
-if(!cur.me||!T.includes(cur.me))cur.me=T[0];if(!cur.ot||!T.includes(cur.ot))cur.ot=T[1]||T[0];
-document.getElementById("nav").innerHTML=[["class","班級課表"],["teacher","教師課表"],["subject","科目查詢"],["period","節次查詢"],["find","調課建議"],["mutual","互調查詢"],["room","專科教室"],["log","調課紀錄"],["manage","管理與資料"]].map(a=>'<button data-v="'+a[0]+'" class="'+(V==a[0]?"on":"")+'">'+a[1]+"</button>").join("");
+cur.T=T;if(!cur.me||!T.includes(cur.me))cur.me=T[0];if(!cur.ot||!T.includes(cur.ot))cur.ot=T[1]||T[0];
+document.getElementById("nav").innerHTML=[["class","班級課表"],["teacher","教師課表"],["subject","科目查詢"],["period","節次查詢"],["find","調課建議"],["mutual","互調查詢"],["apps","調課申請"],["room","專科教室"],["log","異動紀錄"],["manage","管理與資料"]].map(a=>'<button data-v="'+a[0]+'" class="'+(V==a[0]?"on":"")+'">'+a[1]+"</button>").join("");
 let h="";const okM=()=>msg?'<div class="ok">'+esc(msg)+"</div>":"";
 const dts=[0,1,2,3,4].map(i=>addD(cur.wk,i));
-if(V=="class"){const k=S.c[cur.c],E=eng(cur.ms),E0=eng([]),is=dts.flatMap(dt=>iss(E,dt)),bad=new Set(is.flatMap(x=>x.cs.map(c=>key(c,x.dt,x.p))));
+if(V=="class"){const pk=pendKeys(),k=S.c[cur.c],E=eng(cur.ms),E0=eng([]),is=dts.flatMap(dt=>iss(E,dt)),bad=new Set(is.flatMap(x=>x.cs.map(c=>key(c,x.dt,x.p))));
 h+=(is.length?'<div class="warn"><b>這一週衝堂 '+is.length+' 筆</b><br>'+is.map(x=>esc(x.s)).join("<br>")+"</div>":'<div class="ok">這一週沒有教師或教室衝堂</div>')+draftBar()+okM();
-h+='<div class="bar"><select data-k="c">'+opts(C,cur.c)+"</select><span>導師："+esc(k?k.hr:"")+"</span>"+weekBar()+'<button class="b'+(swap?" on":"")+'" data-a="swap">'+(swap?"調課中：點兩節為一步":"調課")+"</button></div>";
+h+='<div class="bar"><select data-k="c">'+opts(C,cur.c)+"</select><span>導師："+esc(k?k.hr:"")+"</span>"+weekBar()+'<button class="b'+(swap?" on":"")+'" data-a="swap">'+(swap?"調課中：點兩節為一步":"調課")+'</button><button class="b'+(cur.rot?" on":"")+'" data-a="rot">'+(cur.rot?"輪調中：依序點 A、B、C…":"輪調（依序點 A、B、C）")+"</button></div>"+(cur.rot?rotCard():"");
 if(swap)h+='<div class="tag" style="margin-bottom:8px">先點一節，可以用上方的日期或「上週／下週」切換到別週，再點第二節，就能跨週對調。'+(sel&&sel.c==cur.c&&!sel.edit?"已選：<b>"+esc(dlab(sel.dt))+"第"+(sel.p+1)+"節</b>":"")+"</div>";
-h+=grid((d,p)=>{const dt=dts[d],s=E.gl(cur.c,dt,p),b=k.g[d][p],t=E.gt(cur.c,dt,p),rm=E.gr(cur.c,dt,p),on=sel&&sel.c==cur.c&&sel.dt==dt&&sel.p==p,ch=s!=b||t!=tOf(cur.c,b),dr=s!=E0.gl(cur.c,dt,p)||t!=E0.gt(cur.c,dt,p);
-return'<td class="c e '+(bad.has(key(cur.c,dt,p))?"x ":"")+(on?"s ":"")+(ch?"m ":"")+(dr?"dr ":"")+(s?"":"free")+'" data-cell="'+dt+","+p+'">'+(s?esc(s)+"<small>"+esc(t)+"</small>"+(rm?"<small>"+esc(rm)+"</small>":"")+(ch?"<small>調課</small>":""):"")+"</td>"},dts);
+h+=grid((d,p)=>{const dt=dts[d],s=E.gl(cur.c,dt,p),b=k.g[d][p],t=E.gt(cur.c,dt,p),rm=E.gr(cur.c,dt,p),rl=(cur.rot&&cur.rn?cur.rn:[]).findIndex(x=>x.c==cur.c&&x.d==dt&&x.p==p),on=rl>=0||(sel&&sel.c==cur.c&&sel.dt==dt&&sel.p==p),ch=s!=b||t!=tOf(cur.c,b),dr=s!=E0.gl(cur.c,dt,p)||t!=E0.gt(cur.c,dt,p);
+return'<td class="c e '+(bad.has(key(cur.c,dt,p))?"x ":"")+(on?"s ":"")+(ch?"m ":"")+(dr?"dr ":"")+(s?"":"free")+'" data-cell="'+dt+","+p+'">'+(s?esc(s)+"<small>"+esc(t)+"</small>"+(rm?"<small>"+esc(rm)+"</small>":"")+(rl>=0?"<small><b>節點 "+"ABCDE"[rl]+"</b></small>":"")+(ch?"<small>"+(pk.has(key(cur.c,dt,p))?"調課（待簽核）":"調課")+"</small>":""):"")+"</td>"},dts);
 h+='<div class="tag" style="margin-top:6px">藍底＝這一天因調課而和週課表不同；虛線框＝草稿尚未送出的變動。沒有進入「調課」模式時，點格子是修改週課表（長期，所有週次都會改變）。</div>';
 if(sel&&sel.edit&&sel.c==cur.c){const w=wd(sel.dt),s=k.g[w][sel.p];h+='<div class="card"><h3>修改週課表（長期）：'+esc(cur.c)+" 週"+DAYS[w]+"第"+(sel.p+1)+'節</h3><div class="bar"><input id="ns" list="sl" value="'+esc(s)+'" placeholder="科目（空白代表無課）"><datalist id="sl">'+Sb.map(x=>"<option>"+esc(x)+"</option>").join("")+'</datalist><button class="b p" data-a="set">儲存</button><button class="b" data-a="clr">清空此節</button><button class="b" data-a="cancel">取消</button></div><div class="tag">這會改變每一週的課表。若只是某一天要調課，請用「調課」。</div></div>'}}
 if(V=="teacher"){const E=eng(cur.ms),is=dts.flatMap(dt=>iss(E,dt)).filter(x=>x.s.includes("教師"+cur.t));let n=0;
 h+=conflictBar(is.map(x=>x.s))+draftBar()+'<div class="bar"><select data-k="t">'+opts(T,cur.t)+"</select>"+weekBar()+"</div>";
-const g=grid((d,p)=>{const dt=dts[d],m=C.filter(c=>E.gl(c,dt,p)&&E.gt(c,dt,p)==cur.t);n+=m.length;const ch=m.some(c=>E.gl(c,dt,p)!=S.c[c].g[d][p]||E.gt(c,dt,p)!=tOf(c,S.c[c].g[d][p]));return'<td class="c '+(m.length>1?"x ":"")+(ch?"m ":"")+(m.length?"":"free")+'">'+m.map(c=>esc(c)+"<small>"+esc(E.gl(c,dt,p))+"</small>").join("")+"</td>"},dts);
+const g=grid((d,p)=>{const dt=dts[d],m=C.filter(c=>E.gl(c,dt,p)&&E.gt(c,dt,p)==cur.t),bz=(S.busy||[]).filter(b=>b.t==cur.t&&b.d==d&&b.p==p);n+=m.length;const ch=m.some(c=>E.gl(c,dt,p)!=S.c[c].g[d][p]||E.gt(c,dt,p)!=tOf(c,S.c[c].g[d][p]));return'<td class="c '+(m.length+bz.length>1?"x ":"")+(ch?"m ":"")+(m.length+bz.length?"":"free")+'">'+m.map(c=>esc(c)+"<small>"+esc(E.gl(c,dt,p))+"</small>").join("")+bz.map(b=>"<b>"+esc(b.l)+"</b><small>固定時段</small>").join("")+"</td>"},dts);
 h+='<div class="tag" style="margin-bottom:6px">本週共 '+n+" 節（含調課後的變動）</div>"+g}
 if(V=="subject"){const E=eng(cur.ms),by={};
 const g=grid((d,p)=>{const dt=dts[d],m={};for(const c of C)if(E.gl(c,dt,p)==cur.s){const t=E.gt(c,dt,p);(m[t]=m[t]||[]).push(c);(by[t]=by[t]||[]).push({d,p,c})}
@@ -234,7 +280,7 @@ h+=draftBar()+'<div class="bar"><select data-k="s">'+opts(Sb,cur.s)+"</select>"+
 if(V=="period"){const E=eng(cur.ms),dt=cur.pdt,p=cur.pp,rows=C.filter(c=>E.gl(c,dt,p)),busy=new Set(rows.map(c=>E.gt(c,dt,p))),w=wd(dt);
 h+=draftBar()+'<div class="bar">'+dayOpts("pdt",dt)+perOpts("pp",p)+'<span class="tag">'+dfull(dt)+"</span></div>"+(w<0?'<div class="warn">這一天不是上課日（星期一到五）</div>':"")+"<div class='w'><table><tr><th>班級</th><th>科目</th><th>教師</th><th>教室</th></tr>"+
 rows.map(c=>"<tr><td>"+esc(c)+"</td><td>"+esc(E.gl(c,dt,p))+"</td><td>"+esc(E.gt(c,dt,p))+"</td><td>"+esc(E.gr(c,dt,p)||"")+"</td></tr>").join("")+"</table></div>"+
-'<div class="card"><h3>這一節沒課的教師（可代課、可調課）</h3><div class="pl">'+(w<0?"":T.filter(t=>!busy.has(t)).map(t=>"<span>"+esc(t)+"</span>").join("")||"無")+"</div></div>"+
+'<div class="card"><h3>這一節沒課的教師（可代課、可調課）</h3><div class="pl">'+(w<0?"":T.filter(t=>!busy.has(t)&&!(S.busy||[]).some(b=>b.t==t&&b.d==w&&b.p==p)).map(t=>"<span>"+esc(t)+"</span>").join("")||"無")+"</div></div>"+
 '<div class="card"><h3>專科教室使用情形</h3><div class="pl">'+Object.keys(S.r).map(r=>{const u=C.filter(c=>E.gl(c,dt,p)&&E.gr(c,dt,p)==r),tx=w<0?[]:S.r[r][w][p].filter(x=>x[0]=="#").map(x=>x.slice(1));return"<span>"+esc(r)+"："+(u.concat(tx).join("、")||"空")+"</span>"}).join("")+"</div></div>"}
 if(V=="find"){const E=eng(cur.ms),fc=cur.fc&&S.c[cur.fc]?cur.fc:C[0];cur.fc=fc;
 const les=cur.ft?C.filter(c=>E.gl(c,cur.fdt,cur.fp)&&E.gt(c,cur.fdt,cur.fp)==cur.ft):[],tc=cur.ft?(les[0]||""):fc,sl=tc?E.gl(tc,cur.fdt,cur.fp):"";
@@ -244,47 +290,70 @@ R.map((st,i)=>'<div class="card"><b>方案 '+(i+1)+"：共 "+st.length+" 步，�
 if(V=="mutual"){const dates=[];for(let o=cur.win==2?-7:0;o<=(cur.win>=1?7:0);o+=7)for(let i=0;i<5;i++)dates.push(addD(cur.wk,o+i));
 const R=cur.me!=cur.ot?mutual(cur.me,cur.ot,dates,cur.sm==1):null;cur.mu=R;
 h+=draftBar()+okM()+'<div class="card"><h3>互調查詢：我和某位老師可以互相調課的節次</h3><p class="tag">選「我」和「對方」，系統找出雙方能互換的節次，已確認不會新增教師或教室衝堂。</p><div class="bar">我 <select data-k="me">'+opts(T,cur.me)+"</select>對方 <select data-k=\"ot\">"+opts(T,cur.ot)+"</select>"+weekBar()+winOpts(cur.win)+"</div></div>";
-if(R){h+='<div class="card"><h3>一、同班時間互換（兩人都教的班級，互換上課時間）</h3><p class="tag">我 '+R.n[0]+" 節、對方 "+R.n[1]+" 節（在選定範圍內）。</p>"+(R.A.length?"<ol>"+R.A.map((s,i)=>"<li>"+esc(stepText(s))+' <button class="b" data-a="mx" data-x="a'+i+'">加入草稿</button></li>').join("")+"</ol>":'<div class="tag">沒有可行的同班互換（兩人沒有共同任教的班級，或互換會造成衝堂）。</div>')+"</div>";
-h+='<div class="card"><h3>二、互相代課（雙方互換授課時段，各班課表不變）</h3><div class="bar"><select data-k="sm"><option value="1"'+(cur.sm==1?" selected":"")+'>只列相同科目</option><option value="0"'+(cur.sm==1?"":" selected")+'>不限科目</option></select></div><p class="tag">條件：對方在我的課那一節沒有課，我在對方的課那一節也沒有課。</p>'+(R.B.length?"<ol>"+R.B.map((s,i)=>"<li>"+esc(stepText(s))+' <button class="b" data-a="mx" data-x="b'+i+'">加入草稿</button></li>').join("")+"</ol>":'<div class="tag">沒有符合條件的時段。</div>')+"</div>"}
+if(R){h+='<div class="card"><h3>一、同班時間互換（兩人都教的班級，互換上課時間）</h3><p class="tag">我 '+R.n[0]+" 節、對方 "+R.n[1]+" 節（在選定範圍內）。</p>"+(R.A.length?"<ol>"+R.A.map((s,i)=>"<li>"+esc(stepText(s))+' <button class="b" data-a="mx" data-x="a'+i+'">加入草稿</button></li>').join("")+"</ol>":'<div class="warn">'+esc(whyA(I))+"</div>")+"</div>";
+h+='<div class="card"><h3>二、互相代課（雙方互換授課時段，各班課表不變）</h3><div class="bar"><select data-k="sm"><option value="1"'+(cur.sm==1?" selected":"")+'>只列相同科目</option><option value="0"'+(cur.sm==1?"":" selected")+'>不限科目</option></select></div><p class="tag">條件：對方在我的課那一節沒有課，我在對方的課那一節也沒有課。</p>'+(R.B.length?"<ol>"+R.B.map((s,i)=>"<li>"+esc(stepText(s))+' <button class="b" data-a="mx" data-x="b'+i+'">加入草稿</button></li>').join("")+"</ol>":'<div class="warn">'+esc(whyB(I))+"</div>")+"</div>"}
 else h+='<div class="warn">請選兩位不同的老師</div>'}
 if(V=="room"){const R=Object.keys(S.r);if(!cur.r||!S.r[cur.r])cur.r=R[0];const lb=c=>c[0]=="#"?c.slice(1):c;
 h+=conflictBar(I.list)+'<div class="bar"><select data-k="r">'+opts(R,cur.r)+"</select><span>週課表（長期）：每週使用 "+S.r[cur.r].flat().length+" 班次；點格子可新增或移除班級</span></div>";
 h+=grid((d,p)=>{const c2=S.r[cur.r][d][p],b=c2.some(c=>c[0]!="#"&&I.bad.has(c+d+p)),on=sel&&sel.d==d&&sel.p==p;return'<td class="c e '+(b?"x ":"")+(on?"s ":"")+(c2.length?"":"free")+'" data-rc="'+d+","+p+'">'+c2.map(c=>esc(lb(c))).join("<br>")+"</td>"});
 if(sel&&sel.d!=undefined){const cell=S.r[cur.r][sel.d][sel.p];h+='<div class="card"><h3>'+esc(cur.r)+" 週"+DAYS[sel.d]+"第"+(sel.p+1)+'節</h3><div class="bar"><select id="rcs">'+C.map(c=>"<option>"+esc(c)+"</option>").join("")+'</select><button class="b p" data-a="radd">加入使用班級</button>'+cell.map(c=>'<button class="b" data-a="rdel" data-x="'+esc(c)+'">移除 '+esc(lb(c))+"</button>").join("")+'<button class="b" data-a="cancel">關閉</button></div></div>'}
 h+='<div class="tag" style="margin-top:8px">這裡是週課表。要看某一天（含調課後）的教室使用，請到「節次查詢」選日期。</div>'}
-if(V=="log"){const L=S.log,f=cur.lf||"",rows=L.filter(e=>!f||e.c.split("、").includes(f)).slice().reverse(),te=cur.tk&&L.find(e=>e.id==cur.tk);
-h+=okM()+'<div class="bar"><select data-k="lf">'+opts(C,f,true)+"</select><span>共 "+L.length+' 筆</span><button class="b" data-a="tsv">匯出全部紀錄</button></div>';
-if(te)h+='<div class="card"><h3>調課單（可全選複製）</h3><textarea readonly style="height:190px">'+esc(tkt(te))+'</textarea><div class="bar"><button class="b" data-a="xc">關閉</button></div></div>';
+if(V=="apps"||V=="log"){const A2=V=="apps",L=S.log,f=cur.lf||"",st0=cur.ls||"",stOf=e=>{const s=stt(e);return s.no?"no":s.ok?"ok":"p"};
+const rows=L.filter(e=>(e.k=="app")==A2&&(!f||e.c.split("、").includes(f))&&(!A2||((!cur.lw||waits(e,cur.lw))&&(!st0||stOf(e)==st0)))).slice().reverse(),te=cur.tk&&L.find(e=>e.id==cur.tk),cnt={p:0,ok:0,no:0};
+L.filter(e=>e.k=="app").forEach(e=>cnt[stOf(e)]++);
+const lwSel='<select data-k="lw"><option value="">等待簽核的人：全部</option>'+OFF.concat(T).map(x=>"<option"+(x==cur.lw?" selected":"")+">"+esc(x)+"</option>").join("")+"</select>";
+h+=okM();
+if(A2)h+=draftBar()+'<div class="card"><h3>新增調課申請</h3><p class="tag">先選出要調的節次，加入「調課草稿」，再在草稿上填申請人與原因後送出。送出後會依序簽核：被調課老師確認 → 教學組長 → 教務主任 → 校長。</p><div class="bar"><button class="b p" data-a="newc">從班級課表選節次</button><button class="b" data-v="find">調課建議</button><button class="b" data-v="mutual">互調查詢</button><button class="b'+(cur.wzo?" on":"")+'" data-a="wz">多角調動精靈</button></div></div>'+
+(cur.wzo&&cur.wz?wzCard(C):"")+'<div class="bar"><select data-k="ls"><option value="">狀態：全部（'+(cnt.p+cnt.ok+cnt.no)+'）</option><option value="p"'+(st0=="p"?" selected":"")+'>待簽核（'+cnt.p+'）</option><option value="ok"'+(st0=="ok"?" selected":"")+'>已核准（'+cnt.ok+'）</option><option value="no"'+(st0=="no"?" selected":"")+'>已退回（'+cnt.no+'）</option></select><select data-k="lf">'+opts(C,f,true)+"</select>"+lwSel+'<span>顯示 '+rows.length+' 筆</span><button class="b" data-a="tsv">匯出全部紀錄</button></div>';
+else h+='<div class="tag" style="margin-bottom:8px">這裡是「修改週課表」的異動，以及舊版的調課紀錄。調課申請請看「調課申請」分頁。</div><div class="bar"><select data-k="lf">'+opts(C,f,true)+'</select><span>共 '+rows.length+' 筆</span><button class="b" data-a="tsv">匯出全部紀錄（含調課申請）</button></div>';
+if(te)h+='<div class="card"><h3>調課單（可全選複製，再用 email 或 LINE 寄給對方）</h3><textarea readonly style="height:190px">'+esc(tkt(te))+'</textarea><div class="bar"><button class="b" data-a="xc">關閉</button></div></div>';
 if(cur.tsv)h+='<div class="card"><h3>全部紀錄（可全選複製，貼到 Excel 或 Google 試算表）</h3><textarea readonly>'+esc(tsv())+'</textarea><div class="bar"><button class="b" data-a="xc">關閉</button></div></div>';
-h+=rows.length?'<div class="w"><table><tr><th>編號／申請時間</th><th>班級</th><th>調課日期</th><th>調整內容</th><th>涉及教師</th><th>原因</th><th>申請人</th><th></th></tr>'+rows.map(e=>{const del=cur.rm==e.id,ov=e.k=="app"?ovl(e):[];
-return"<tr><td>"+esc(e.no)+'<small class="tag"><br>'+esc(e.t)+"</small></td><td>"+esc(e.c)+"</td><td>"+(e.k=="app"?e.dt.map(x=>esc(dfull(x))).join("<br>"):'<small class="tag">舊版紀錄</small>')+'</td><td style="text-align:left">'+(e.k=="app"?e.steps.map(s=>"<div>"+esc(stepText(s))+"</div>").join(""):esc(desc(e)))+"</td><td>"+esc(e.tc.join("、"))+'</td><td><input data-lr="'+e.id+'" value="'+esc(e.r||"")+'" placeholder="補填原因"></td><td><input data-lw="'+e.id+'" value="'+esc(e.w||"")+'" size="6"></td><td>'+(del?'<div class="tag">'+(e.k=="app"?"刪除後這筆調課取消，課表回到原樣。":"舊版紀錄：只會移除紀錄，不會改動週課表。")+(ov.length?"<br>注意：和 "+ov.map(x=>x.no).join("、")+" 有重疊的節次，刪除後那些申請的結果可能改變。":"")+'</div><button class="b p" data-a="rmy">確定刪除</button><button class="b" data-a="rmn">取消</button>':'<button class="b" data-a="tk" data-x="'+e.id+'">調課單</button><button class="b" data-a="rm" data-x="'+e.id+'">刪除申請</button>')+"</td></tr>"}).join("")+"</table></div>":'<div class="card">還沒有調課申請。在「班級課表」按「調課」選兩節，加入草稿後送出，就會記在這裡。</div>'}
+h+=rows.length?'<div class="w"><table><tr><th>編號／申請時間</th><th>班級</th><th>調課日期</th><th>調整內容</th><th>涉及教師</th><th>原因</th><th>申請人</th><th>簽核</th><th></th></tr>'+rows.map(e=>{const del=cur.rm==e.id,ov=e.k=="app"?ovl(e):[];
+return"<tr><td>"+esc(e.no)+'<small class="tag"><br>'+esc(e.t)+"</small></td><td>"+esc(e.c)+"</td><td>"+(e.k=="app"?e.dt.map(x=>esc(dfull(x))).join("<br>"):'<small class="tag">'+(e.k=="edit"?"週課表修改":"舊版紀錄")+"</small>")+'</td><td style="text-align:left">'+(e.k=="app"?e.steps.map(s=>"<div>"+esc(stepText(s))+"</div>").join(""):esc(desc(e)))+"</td><td>"+esc(e.tc.join("、"))+'</td><td><input data-lr="'+e.id+'" value="'+esc(e.r||"")+'" placeholder="補填原因"></td><td><input data-lw="'+e.id+'" value="'+esc(e.w||"")+'" size="6"></td><td style="text-align:left;min-width:190px">'+flowHtml(e)+'</td><td>'+(del?'<div class="tag">'+(e.k=="app"?"刪除後這筆調課取消，課表回到原樣。":"只會移除這筆紀錄，不會改動週課表。")+(ov.length?"<br>注意：和 "+ov.map(x=>x.no).join("、")+" 有重疊的節次，刪除後那些申請的結果可能改變。":"")+'</div><button class="b p" data-a="rmy">確定刪除</button><button class="b" data-a="rmn">取消</button>':'<button class="b" data-a="tk" data-x="'+e.id+'">調課單</button><button class="b" data-a="rm" data-x="'+e.id+'">'+(e.k=="app"?"刪除申請":"刪除紀錄")+"</button>")+"</td></tr>"}).join("")+"</table></div>":'<div class="card">'+(A2?"還沒有符合條件的調課申請。":"沒有異動紀錄。")+"</div>"}
 if(V=="manage"){const k=S.c[cur.c],used=k?[...new Set(k.g.flat().filter(Boolean))].sort():[];
 h+=conflictBar(I.list)+'<div class="bar"><select data-k="c">'+opts(C,cur.c)+'</select></div><div class="card"><h3>'+esc(cur.c)+' 導師與科任教師</h3><div class="kv"><label><span>導師</span><input data-hr="1" value="'+esc(k?k.hr:"")+'"></label>'+used.map(s=>'<label><span>'+esc(s)+'</span><input data-sj="'+esc(s)+'" value="'+esc(k.t[s]||"")+'" placeholder="空白＝導師"></label>').join("")+"</div></div>"+
-'<div class="card"><h3>新增班級</h3><div class="bar"><input id="nc" placeholder="例如：二年一班"><input id="nh" placeholder="導師姓名"><button class="b p" data-a="add">新增</button><button class="b" data-a="del">刪除目前班級</button></div></div>'+
+'<div class="card"><h3>簽核人員（顯示在調課單與簽核流程上）</h3><div class="kv">'+OFF.map(r=>'<label><span>'+r+'</span><input data-role="'+r+'" value="'+esc((S.roles||{})[r]||"")+'" placeholder="姓名"></label>').join("")+'</div></div>'+'<div class="card"><h3>教師固定時段（不在班級課表上、但老師當下有課，例如直播共學、跨域）</h3><p class="tag">這些時段會被當成老師「沒空」，納入衝堂檢查、調課建議、互調查詢與空堂教師名單。</p><div class="w"><table><tr><th>教師</th><th>時段</th><th>事項</th><th></th></tr>'+(S.busy||[]).map((b,i)=>"<tr><td>"+esc(b.t)+"</td><td>週"+DAYS[b.d]+"第"+(b.p+1)+"節</td><td>"+esc(b.l)+'</td><td><button class="b" data-a="bd" data-x="'+i+'">刪除</button></td></tr>').join("")+'</table></div><div class="bar"><select data-k="bt">'+opts(T,cur.bt||T[0])+'</select><select data-k="bd">'+DAYS.map((x,i)=>"<option value="+i+(i==(cur.bd||0)?" selected":"")+">週"+x+"</option>").join("")+'</select><select data-k="bp">'+PER.map((x,i)=>"<option value="+i+(i==(cur.bp||0)?" selected":"")+">第"+x+"節</option>").join("")+'</select><input data-bl="1" value="'+esc(cur.bl||"")+'" placeholder="事項（例如：直播共學）"><button class="b p" data-a="ba">新增</button></div></div>'+'<div class="card"><h3>新增班級</h3><div class="bar"><input id="nc" placeholder="例如：二年一班"><input id="nh" placeholder="導師姓名"><button class="b p" data-a="add">新增</button><button class="b" data-a="del">刪除目前班級</button></div></div>'+
 '<div class="card"><h3>資料備份與匯入</h3><p class="tag">資料自動存在此瀏覽器（含調課申請）。需要備份或換電腦時，複製下方 JSON；貼上 JSON 後按「套用」即可還原。</p><textarea id="js">'+esc(JSON.stringify(S))+'</textarea><div class="bar"><button class="b p" data-a="imp">套用</button><button class="b" data-a="rst">還原為初始資料</button></div></div>'}
 document.getElementById("main").innerHTML=h}
 document.addEventListener("click",e=>{const t=e.target.closest("[data-v],[data-cell],[data-a],[data-rc]");if(!t)return;
-if(t.dataset.v){V=t.dataset.v;sel=null;swap=false;msg=""}
+if(t.dataset.v){V=t.dataset.v;sel=null;swap=false;cur.rot=false;msg=""}
 else if(t.dataset.cell){const[dt,ps]=t.dataset.cell.split(","),p=+ps;
-if(swap){if(!sel||sel.c!=cur.c||sel.edit)sel={c:cur.c,dt,p};else if(sel.dt==dt&&sel.p==p)sel=null;else{msg=addSw(cur.c,{d:sel.dt,p:sel.p},{d:dt,p})||"已加入調課草稿，請在上方確認後送出申請";sel=null}}
+if(cur.rot){if(cur.rn&&cur.rn.length&&cur.rn[0].c!=cur.c)cur.rn=[];const nn=cur.rn||(cur.rn=[]),ix=nn.findIndex(x=>x.d==dt&&x.p==p);if(ix>=0)nn.splice(ix,1);else if(nn.length<5)nn.push({c:cur.c,d:dt,p})}
+else if(swap){if(!sel||sel.c!=cur.c||sel.edit)sel={c:cur.c,dt,p};else if(sel.dt==dt&&sel.p==p)sel=null;else{msg=addSw(cur.c,{d:sel.dt,p:sel.p},{d:dt,p})||"已加入調課草稿，請在上方確認後送出申請";sel=null}}
 else{if(cur.ms.length)msg="有尚未送出的調課草稿，請先送出或清空，再修改週課表";else{sel={c:cur.c,dt,p,edit:1};msg=""}}}
 else if(t.dataset.rc){const[d,p]=t.dataset.rc.split(",").map(Number);sel={d,p}}
 else{const a=t.dataset.a,g=S.c[cur.c]&&S.c[cur.c].g;
-if(a=="swap"){swap=!swap;sel=null;msg=""}
+if(a=="swap"){swap=!swap;cur.rot=false;sel=null;msg=""}
 if(a=="cancel")sel=null;
 if(a=="wp")cur.wk=addD(cur.wk,-7);
 if(a=="wn")cur.wk=addD(cur.wk,7);
 if(a=="dx")cur.ms.splice(+t.dataset.x,1);
 if(a=="dc")cur.ms=[];
-if(a=="ds"&&cur.ms.length){const st=cur.ms.slice(),e2=Object.assign(stamp(),{k:"app",c:clsOf(st),steps:st,tc:tcs(st),dt:datesOf(st),r:cur.reason||"",w:cur.who||""});S.log.push(e2);cur.ms=[];cur.reason="";swap=false;msg="已送出調課申請 "+e2.no+"（調課日期："+e2.dt.map(dlab).join("、")+"）";save()}
+if(a=="ba"){const tt=cur.bt||(cur.T||[])[0];if(tt&&cur.bl&&cur.bl.trim()){(S.busy=S.busy||[]).push({t:tt,d:+(cur.bd||0),p:+(cur.bp||0),l:cur.bl.trim()});cur.bl="";msg="已新增教師固定時段";save()}}
+if(a=="bd"){S.busy.splice(+t.dataset.x,1);save()}
+if(a=="rot"){cur.rot=!cur.rot;swap=false;sel=null;cur.rn=[];msg=""}
+if(a=="rc")cur.rn=[];
+if(a=="rx"){cur.rot=false;cur.rn=[]}
+if(a=="rg"){const n=cur.rn||[];if(n.length>=3&&n[0].c==cur.c){const keep=cur.wz;cur.wz={c:cur.c,nodes:n};const pl=wzPlan();cur.wz=keep;if(pl.err)msg=pl.err;else{cur.ms=cur.ms.concat(pl.st);msg="已加入調課草稿（"+n.length+" 節輪調，共 "+pl.st.length+" 步），請在上方確認衝堂後送出申請";cur.rn=[];cur.rot=false}}}
+if(a=="wz"){cur.wzo=!cur.wzo;if(cur.wzo&&!cur.wz)cur.wz={c:cur.c||cls()[0],nodes:[0,1,2].map(i=>({d:addD(cur.wk,i),p:0}))}}
+if(a=="wza"&&cur.wz&&cur.wz.nodes.length<5){const n=cur.wz.nodes.length;cur.wz.nodes.push({d:addD(cur.wk,n%5),p:0})}
+if(a=="wzr"&&cur.wz&&cur.wz.nodes.length>3)cur.wz.nodes.pop();
+if(a=="wzg"&&cur.wz){const pl=wzPlan();if(pl.err)msg=pl.err;else{cur.ms=cur.ms.concat(pl.st);cur.wzo=false;msg="已加入調課草稿（"+cur.wz.nodes.length+" 節輪調，共 "+pl.st.length+" 步），請在上方確認衝堂後送出申請"}}
+if(a=="newc"){V="class";swap=true;sel=null;msg="已進入調課模式：先點一節，再點第二節（可用上方的日期或「上週／下週」切換週次，跨週選取）"}
+if(a=="ds"&&cur.ms.length){const st=cur.ms.slice(),e2=Object.assign(stamp(),{k:"app",c:clsOf(st),steps:st,tc:tcs(st),dt:datesOf(st),r:cur.reason||"",w:cur.who||"",fl:mkFlow(tcs(st),cur.who)});S.log.push(e2);cur.ms=[];cur.reason="";swap=false;V="apps";cur.lf="";cur.lw="";cur.ls="";msg="已送出調課申請 "+e2.no+"（調課日期："+e2.dt.map(dlab).join("、")+"）。請按該筆的「調課單」複製內容，寄給"+(e2.fl[0].k=="t"?"被調課老師確認":"教學組長")+"，對方回覆後再記錄簽核結果";save()}
 if(a=="find"){const tc=cur.ft?(()=>{const E=eng(cur.ms);return cls().find(c=>E.gl(c,cur.fdt,cur.fp)&&E.gt(c,cur.fdt,cur.fp)==cur.ft)})():cur.fc;
 if(!tc||!S.c[tc]||wd(cur.fdt)<0||!eng(cur.ms).gl(tc,cur.fdt,cur.fp))cur.sol={res:[],n:0,none:1};else{const r=search(tc,{d:cur.fdt,p:cur.fp},cur.win,cur.fx=="x");r.sort((x,y)=>x.length-y.length);cur.sol={res:r}}}
 if(a=="ap"&&cur.sol){const st=cur.sol.res[+t.dataset.x];if(st){cur.ms=cur.ms.concat(st);cur.sol=null;V="class";cur.c=st[0].c;cur.wk=mon(st[0].a.d);msg="已加入調課草稿（"+st.length+" 步），請確認衝堂提示後送出申請"}}
-if(a=="mx"&&cur.mu){const x=t.dataset.x,s=(x[0]=="a"?cur.mu.A:cur.mu.B)[+x.slice(1)];if(s){cur.ms.push(s);msg="已加入調課草稿，請在上方確認後送出申請"}}
+if(a=="mx"&&cur.mu){const x=t.dataset.x,s=(x[0]=="a"?cur.mu.A:cur.mu.B)[+x.slice(1)];if(s){cur.ms.push(s);if(!cur.who)cur.who=cur.me;msg="已加入調課草稿，申請人已帶入「"+cur.me+"」，請在上方確認後送出申請"}}
 if(a=="tk")cur.tk=+t.dataset.x,cur.tsv=false;
 if(a=="tsv")cur.tsv=true,cur.tk=null;
 if(a=="xc")cur.tk=null,cur.tsv=false;
 if(a=="rm")cur.rm=+t.dataset.x;
+if(a=="sg"){cur.sg=+t.dataset.x;cur.sgi=0;cur.fnote=""}
+if(a=="sgx")cur.sg=null;
+if(a=="sgy"||a=="sgn"){const e2=S.log.find(x=>x.id==cur.sg);if(e2&&e2.fl){const it=stt(e2).next[cur.sgi||0];if(it){const n=new Date();it.d=a=="sgy"?"ok":"no";it.at=fd(n)+" "+q2(n.getHours())+":"+q2(n.getMinutes());it.note=cur.fnote||"";msg=lab(it)+(a=="sgy"?"已同意":"已退回")+"（"+e2.no+"）："+stt(e2).s;save()}}cur.sg=null}
+if(a=="sgr"){const e2=S.log.find(x=>x.id==+t.dataset.x);if(e2&&e2.fl){e2.fl.forEach(f=>{f.d="";f.at="";f.note=""});save()}}
+if(a=="sgs"){const e2=S.log.find(x=>x.id==+t.dataset.x);if(e2&&!e2.fl){e2.fl=mkFlow(e2.tc,e2.w);save()}}
 if(a=="rmn")cur.rm=null;
 if(a=="rmy"){const i=S.log.findIndex(x=>x.id==cur.rm);if(i>=0){msg=S.log[i].k=="app"?"已刪除調課申請 "+S.log[i].no+"，課表已回到未調課的狀態":"已刪除舊版紀錄 "+S.log[i].no;S.log.splice(i,1)}cur.rm=null;save()}
 if(a=="radd"){const c=document.getElementById("rcs").value,cell=S.r[cur.r][sel.d][sel.p];if(c&&!cell.includes(c)){cell.push(c);save()}}
@@ -293,15 +362,21 @@ if(a=="set"){const w=wd(sel.dt),v=document.getElementById("ns").value.trim(),o=g
 if(a=="clr"){const w=wd(sel.dt),o=g[w][sel.p];if(o){const e2=Object.assign(stamp(),{k:"edit",c:cur.c,a:{d:w,p:sel.p,s:o,t:tOf(cur.c,o)},b:{d:w,p:sel.p,s:"",t:""},r:"",w:""});e2.tc=[e2.a.t].filter(Boolean);S.log.push(e2);msg="已清空，已記入紀錄 "+e2.no}g[w][sel.p]="";sel=null;save()}
 if(a=="add"){const n=document.getElementById("nc").value.trim(),h2=document.getElementById("nh").value.trim();if(n&&!S.c[n]){S.c[n]={hr:h2,t:{},g:DAYS.map(()=>PER.map(()=>""))};cur.c=n;save()}}
 if(a=="del"&&confirm("確定刪除 "+cur.c+" 的課表？")){for(const r in S.r)S.r[r].forEach(dy=>dy.forEach(ce=>{const i=ce.indexOf(cur.c);if(i>=0)ce.splice(i,1)}));delete S.c[cur.c];cur.c="";save()}
-if(a=="imp"){try{const o=JSON.parse(document.getElementById("js").value);if(!o.c)throw 0;S=o;if(!S.r)S.r=JSON.parse(JSON.stringify(SEED.r));if(!S.log)S.log=[];save();msg="已匯入"}catch(x){alert("JSON 格式不正確")}}
-if(a=="rst"&&confirm("還原後會清除所有修改與調課申請，確定嗎？")){S=JSON.parse(JSON.stringify(SEED));S.v=10;S.log=[];cur.ms=[];save()}}
+if(a=="imp"){try{const o=JSON.parse(document.getElementById("js").value);if(!o.c)throw 0;S=o;if(!S.r)S.r=JSON.parse(JSON.stringify(SEED.r));if(!S.log)S.log=[];if(!S.roles)S.roles={教學組長:"",教務主任:"",校長:""};if(!S.busy)S.busy=JSON.parse(JSON.stringify(SEED.busy));save();msg="已匯入"}catch(x){alert("JSON 格式不正確")}}
+if(a=="rst"&&confirm("還原後會清除所有修改與調課申請，確定嗎？")){S=JSON.parse(JSON.stringify(SEED));S.v=12;S.log=[];S.roles={教學組長:"",教務主任:"",校長:""};S.busy=JSON.parse(JSON.stringify(SEED.busy));cur.ms=[];save()}}
 render()});
 document.addEventListener("change",e=>{const t=e.target;
-if(t.dataset.k){const k=t.dataset.k;cur[k]=["p","fp","pp","win","sm"].includes(k)?+t.value:t.value;if(["fdt","pdt"].includes(k)&&!t.value)return;sel=null;msg="";if(k=="ft"||k=="fc"||k=="fdt"||k=="fp"||k=="win"||k=="fx")cur.sol=null}
+if(t.dataset.k){const k=t.dataset.k;cur[k]=["p","fp","pp","win","sm","sgi","bd","bp"].includes(k)?+t.value:t.value;if(["fdt","pdt"].includes(k)&&!t.value)return;sel=null;msg="";if(k=="ft"||k=="fc"||k=="fdt"||k=="fp"||k=="win"||k=="fx")cur.sol=null}
 else if(t.dataset.wk){if(t.value)cur.wk=mon(t.value);else return}
 else if(t.dataset.hr){S.c[cur.c].hr=t.value.trim();save()}
 else if(t.dataset.sj){const v=t.value.trim();if(v)S.c[cur.c].t[t.dataset.sj]=v;else delete S.c[cur.c].t[t.dataset.sj];save()}
 else if(t.dataset.rs){cur.reason=t.value;return}
+else if(t.dataset.fnote){cur.fnote=t.value;return}
+else if(t.dataset.bl){cur.bl=t.value;return}
+else if(t.dataset.wzc){cur.wz.c=t.value}
+else if(t.dataset.wzd!==undefined){if(!t.value)return;cur.wz.nodes[+t.dataset.wzd].d=t.value}
+else if(t.dataset.wzp!==undefined){cur.wz.nodes[+t.dataset.wzp].p=+t.value}
+else if(t.dataset.role){S.roles=S.roles||{};S.roles[t.dataset.role]=t.value.trim();save()}
 else if(t.dataset.who){cur.who=t.value;return}
 else if(t.dataset.lr||t.dataset.lw){const e2=S.log.find(x=>x.id==(t.dataset.lr||t.dataset.lw));if(e2){if(t.dataset.lr)e2.r=t.value.trim();else e2.w=t.value.trim();save()}return}
 else return;render()});
